@@ -1,0 +1,187 @@
+\chapter{Regole congiuntive}
+In questo capitolo andiamo a trattare una sottoclasse dei problemi di classificazione, nella quale, abbiamo solo due
+valori target: \verb|true| e \verb|false|. Per affrontarli andremo a ridurre lo spazio delle ipotesi tramite
+\textbf{regole congiuntive}.
+
+In questo specifico caso, la funzione da inferire, \`e di tipo \textbf{logico booleano}, quindi ci stiamo muovendo in uno
+spazio \textbf{finito} e a valori \textbf{discreti}. Assumiamo inoltre che non ci sia rumore nei dati di training.
+
+\begin{definition}
+	Si dice che un'ipotesi $h$ \textbf{soddisfa} un certo valore in input $x$ se
+	\[ h(x) = 1 \]
+\end{definition}
+
+\begin{definition}\label{def: consistente}
+	Si dice che un'ipotesi $h$ \`e \textbf{consistente} con un esempio di training $d_p$ se
+	\[ h(x_p) = y_p \]
+\end{definition}
+
+\section{Spazio delle ipotesi}
+Nel caso di sole funzioni booleane lo spazio delle ipotesi ha dimensione
+\[ |H| = 2^{2^n} \]
+dove $n$ \`e la dimensione dell'input. Questo perch\'e abbiamo $2^n$ possibili istanze delle $n$ variabili in input e
+per ognuna di esse possiamo avere in output 2 valori booleani.
+
+Le \textbf{regole congiuntive} ci permettono di restringere la dimensione $H$ andando a considerare solo funzioni che mettono
+in \emph{and} le variabili, ottenendo cos\`i uno spazio delle ipotesi di dimensione
+\[ |H| = 2^n \]
+Adesso infatti si considera solo la dimensione di tutte le possibili istanze delle variabili in input. Prima consideravamo,
+per tutte le possibili istanze di input, anche tutte le possibili funzioni booleane a $n$ variabili in input.
+
+Le regole congiuntive ammettono come unica funzione la \textbf{congiunzione} tutte le variabili in input.
+
+Se volessimo aggiungere tutti i possibili input negati (\textbf{not}) avremmo uno spazio delle ipotesi di dimensione
+\[ |H| = 3^n + 1 \]
+In generale strutturare lo spazio di ricerca (anche se infinito) aiuta molto nella ricerca.
+
+\section{Rappresentazione delle ipotesi}
+Un ipotesi $h$ \`e rappresentata come una congiunzione di vincoli sugli attributi. In particolare ogni vincolo pu\`o
+essere
+\begin{itemize}
+	\item Un \textbf{valore specifico}: si assegna all'attributo un valore vero e proprio tra quelli consentiti.
+	\item Un \textbf{valore qualsiasi}: indicato con \verb|?|, vuol dire che non ci importa quale valore
+	      scegliamo per quell'attributo.
+	\item Un \textbf{valore vietato}: indicato con $\phi$, significa che nessun valore \`e consentito per
+	      quell'attributo.
+\end{itemize}
+
+\begin{definition}
+	Si dice che una certa ipotesi $h_j$ \`e \textbf{pi\`u generale} di $h_k$ se e solo se, per ogni $x \in X$ vale che
+	\[ h_k(x) = 1 \quad \Rightarrow \quad h_j(x) = 1 \]
+	e si indica con
+	\[ h_j \geq h_k \]
+\end{definition}
+
+Tramite la definizione appena data possiamo stabilire un \textbf{ordinamento parziale} utile per la ricerca.
+L'idea \`e quella di partire da ipotesi molto specifiche e \emph{generalizzarle} in maniera \textbf{conservativa},
+ovvero facendo s\`i che, per ogni esempio positivo, anche la $h$ sia positiva in modo che sia anche \emph{consistente}
+con il training set.
+
+\section{Algoritmo Find-S}
+L'algoritmo trova l'ipotesi pi\`u \textbf{specifica} in $H$ e che sia consistente con gli esempi di allenamento
+\textbf{positivi}. L'ipotesi trovata \`e consistente anche con gli esempi negativi a patto che anche $c$ sia
+contenuto in $H$. Questo perch\'e $c \geq h$
+\begin{enumerate}
+	\item Si inizializza $h$ con l'ipotesi pi\`u specifica.
+	\item Per ogni istanza $x$ di un esempio di training positivo:
+	      \begin{itemize}
+		      \item Per ogni attributo in $h$:
+		            \begin{itemize}
+			            \item Se l'attributo \`e soddisfatto da $x$ in $h$ non si fa niente.
+			            \item Altrimenti si rimpiazza l'attributo con il vincolo pi\`u generale che \`e soddisfatto
+			                  da $x$.
+		            \end{itemize}
+	      \end{itemize}
+	\item Si ritorna l'ipotesi $h$ trovata (la pi\`u specifica).
+\end{enumerate}
+
+\section{Version Space}
+L'idea \`e quella di generare una \emph{descrizione} dell'insieme di tutte le ipotesi $h$ consistenti con il training
+set $D$.
+
+\`E possibile farlo senza enumerarle tutte. Per farlo dobbiamo conoscere la definizione di \emph{consistenza}
+(definizione \ref{def: consistente}) per un'ipotesi $h$ rispetto ad un training set $D$.
+
+\begin{definition}
+	Il \textbf{version space} $VS_{H, D}$, rispetto allo spazio delle ipotesi $H$ e al training set $D$, \`e definito
+	come il sottoinsieme delle ipotesi di $H$ consistenti con tutti gli esempi del training set $D$.
+	\[ VS_{H, D} = \{ h \in H \mid consistent(h, D) \} \]
+\end{definition}
+
+\subsection{Algoritmo di eliminazione con lista}
+L'algoritmo descritto di seguito \`e irrealistico poich\'e si dovrebbero enumerare tutte le possibili ipotesi in $H$.
+\begin{enumerate}
+	\item Si crea il version space come una lista contenente tutte le possibili ipotesi in $H$.
+	\item Per ogni esempio di allenamento si rimuove dal version space ogni ipotesi inconsistente con l'esempio
+	      di allenamento.
+	\item Si ritorna la lista di ipotesi nel version space.
+\end{enumerate}
+
+\subsection{Rappresentazione version space}
+Introduciamo ora un po' di notazione per riuscire a rappresentare il version space in maniera pi\`u efficiente.
+
+\begin{definition}
+	Il \textbf{confine generale}, $G$, del version space $VS_{H, D}$ \`e l'insieme delle ipotesi massimamente generali
+	e consistenti in $D$.
+\end{definition}
+
+\begin{definition}
+	Il \textbf{confine specifico}, $S$, del version space $VS_{H, D}$ \`e l'insieme delle ipotesi massimamente
+	specifiche e consistenti in $D$.
+\end{definition}
+
+\begin{theorem}
+	Ogni ipotesi nel version space sta tra il confine generale e il confine specifico.
+\end{theorem}
+
+\subsection{Candidate Elimination per esempi positivi}
+Sia $G$ il confine generale e $S$ il confine specifico.
+\begin{enumerate}
+	\item Per ogni esempio di allenamento positivo $d = \langle x, c(x) \rangle$.
+	\item Rimuovo da $G$ ogni ipotesi inconsistente con $d$.
+	\item Per ogni ipotesi $s$ in $S$ inconsistente con $d$ generalizzo $S$:
+	      \begin{enumerate}
+		      \item Rimuovo $s$ da $S$.
+		      \item Aggiungo a $S$ tutte le minime generalizzazioni $h$ di $s$, tali che
+		            \begin{itemize}
+			            \item $h$ sia consistente con $d$.
+			            \item almeno un membro di $G$ sia pi\`u generale di $h$.
+		            \end{itemize}
+		      \item Rimuovo da $S$ ogni ipotesi pi\`u generale delle ipotesi in $S$.
+	      \end{enumerate}
+\end{enumerate}
+
+\subsection{Candidate Elimination per esempi negativi}
+Si pu\`o scrivere l'algoritmo per esempi negativi, in maniera speculare a quello visto per esempi positivi.
+\begin{enumerate}
+	\item Per ogni esempio di allenamento negativo $d$.
+	\item Rimuovo da $S$ ogni ipotesi inconsistente con $d$.
+	\item Per ogni ipotesi $g$ in $G$ inconsistente con $d$ specializzo $G$:
+	      \begin{enumerate}
+		      \item Rimuovo $g$ da $G$.
+		      \item Aggiungo a $G$ tutte le minime specializzazioni $h$ di $g$, tali che:
+		            \begin{itemize}
+			            \item $h$ sia consistente con $d$.
+			            \item almeno un membro di $S$ sia pi\`u specifico di $h$.
+		            \end{itemize}
+		      \item Rimuovo da $G$ ogni ipotesi pi\`u specifica delle ipotesi in $G$.
+	      \end{enumerate}
+\end{enumerate}
+
+\subsection{Conclusioni}
+Una volta generalizzato $S$ e specializzato $G$ pi\`u che possiamo in base agli esempi di training, otterremo due
+confini per il nostro spazio delle ipotesi. Le ipotesi che si trovano sui due confini e quelle che stanno in mezzo
+sono tutte consistenti con il training set.
+
+Quando riceveremo un nuovo input, questo verr\`a classificato in base alla maggioranza dei risultati delle varie
+ipotesi. In sintesi, se pi\`u ipotesi classificano il dato come positivo l'output finale sar\`a una classificazione
+positiva, viceversa per una maggioranza di classificazioni negative.
+
+In caso di parit\`a l'output restituito sar\`a \textbf{rejection}.
+
+\section{Bias induttivi}
+I \textbf{bias induttivi} sono assunzioni che facciamo sulla nostra funzione obbiettivo e sono fondamentali per
+riuscire a \emph{generalizzare} bene.
+
+Per ora visto solo le regole congiuntive le quali sono servono a restringere lo spazio delle ipotesi.
+
+\begin{theorem}
+	Un apprendimento che non fa preferenze di alcun tipo non \`e in grado di generalizzare.
+	\begin{proof}
+		Ogni istanza non osservata sar\`a classificata positiva da met\`a delle ipotesi nello spazio delle versioni e
+		negativa dall'altra met\`a.
+	\end{proof}
+\end{theorem}
+
+L'apprendimento senza assunzioni a priori non ha basi razionali per classificare istanze non ancora viste. Le assunzioni
+a priori non sono utilizzate per una questione di efficienza ma per il bisogno di \emph{generalizzare}.
+
+\begin{definition}
+	Sia $L$ un algoritmo di apprendimento, $X$ l'insieme delle istanze, $c$ la funzione obbiettivo,
+	$D_c = \{<x, c(x)>\}$ l'insieme di esempi di allenamento e sia $L(x_i, D_c)$ la classificazione assegnata ad
+	un'istanza $x_i$ da $L$ dopo aver lavorato sull'insieme $D_c$. Chiamo \textbf{bias induttivo} di $L$ ogni minimo
+	insieme $B$ di asserzioni tali che, per ogni funzione obbiettivo $c$ e per il corrispondente insieme di esempi di
+	allenamento $D_c$.
+	\[ (\forall x_i \in X) [B \wedge D_c \wedge x_i] \vdash L(x_i, D_c) \]
+	dove $A \vdash B$ significa che $A$ implica logicamente $B$.
+\end{definition}

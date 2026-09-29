@@ -1,0 +1,145 @@
+\section{Verilog}
+Introduciamo brevemente il linguaggio \textbf{Verilog} per la simulazione ed implementazione di
+piccole reti logiche. Nello specifico andremo a vedere com'è possibile implementare i circuiti
+visti fino ad ora, senza specificare come funziona il linguaggio. Iniziamo con il rappresentare un
+circuito qualsiasi tramite la sua tabella di verità.
+\begin{minted}{verilog}
+primitive rete(output out, input a, input b);
+	table
+		0 0 : 1;
+		0 1 : 1;
+		1 0 : 1;
+		1 1 : 0;
+	endtable
+endprimitive
+\end{minted}
+In verilog, una \verb|primitive| può avere più ingressi ma una sola uscita, quindi nel caso
+avessimo bisogno di una tabella di verità a più uscite dovremmo riscrivere una \verb|primitive| per
+ogni uscita.
+
+Dalla tabella di verità scritta sopra è possibile estrapolare un'espressione dell'algebra booleana
+nel modo descritto nei paragrafi precedenti, ottenendo
+\[ z = \bar{x} \bar{y} + \bar{x} y + x \bar{y} \]
+In verilog possiamo usare una sintassi che ci permette di scrivere espressioni booleane in questo
+modo
+\begin{minted}{verilog}
+module rete(output out, input a, input b);
+	assign out = ~a & ~b | ~a & b | a & ~b;
+endmodule
+\end{minted}
+A questo punto non ci rimane che testare la nostra rete tramite un programma "\verb|main|" che
+possiamo definire in questo modo
+\begin{minted}{verilog}
+module test();
+	reg a = 0, b = 0;
+	wire out;
+	rete r(out, a, b); // istanziazione della rete
+	integer i = 0;
+	
+	initial begin // main
+		$dumpfile("test.vcd"); // file con i risultati delle simulazione
+		$dumpvars;
+
+		for(i = 0; i < 4; i = i + 1) begin
+            {a, b} = i; #3;
+        end
+    	$finish;
+	end
+endmodule
+\end{minted}
+Come abbiamo già fatto possiamo però usare le regole dell'algebra booleana per semplificare
+l'espressione
+\[ z = \bar{x} \bar{y} + \bar{x} y + x \bar{y} \]
+e farla diventare
+\[ z = \bar{x} + \bar{y} \]
+e dunque possiamo creare un altro modulo di questo tipo
+\begin{minted}{verilog}
+module rete(output out, input a, input b);
+	assign z = ~a | ~b;
+endmodule
+\end{minted}
+che calcola la stessa cosa di prima.
+
+\subsection{Multiplexer}
+Vogliamo ora implementare un multiplexer come quello visto in precedenza, in cui si hanno tre
+ingressi, $x$, $y$ e $c$ e una sola uscita $z$ che dipende da $c$. Come in precendenza, possiamo
+scrivere una forma contratta della tabella di verità tramite il simbolo \verb|?| per indicare i
+valori \textbf{non specificati}.
+\begin{minted}{verilog}
+primitive multiplexer(output out, input c, input a, input b);
+	table
+		0 0 ? : 0;
+		0 1 ? : 1;
+		1 ? 0 : 0;
+		1 ? 1 : 1;
+	endtable
+endprimitive
+\end{minted}
+Se volessimo riscrivere la cosa in forma di algebra booleana abbiamo
+\begin{minted}{verilog}
+module multiplexer(output out, input c, input a, input b);
+	assign out = ~c & a | c & b;
+endmodule
+\end{minted}
+In maniera molto simile a prima testiamo il nostro circuito con un modulo che non fa altro che
+provare tutte le possibili combinazioni dei valori di \verb|a|, \verb|b| e \verb|c|.
+
+\subsection{Addizionatore}
+Nel caso volessimo implementare un \textbf{addizionatore} di due sequenze, entrambe da 2 bit, le
+cose si complicano leggermente. Un primo metodo per riuscire ad implementare tale oggetto consiste
+nell'implementazione di un modulo addizionatore
+\begin{minted}{verilog}
+module adder(output s, output r_out, input a, input b, input r_in);
+	adder_somma somma(s, a, b, r_in);
+	adder_riporto riporto(r_out, a, b, r_in);
+endmodule
+\end{minted}
+Dove \verb|adder_somma| è definito in questo modo
+\begin{minted}{verilog}
+primitive adder_somma(output s, input a, input b, input r_in);
+	table
+		0 0 0 : 0;
+		0 0 1 : 1;
+		0 1 0 : 1;
+		0 1 1 : 0;
+		1 0 0 : 1;
+		1 0 1 : 0;
+		1 1 0 : 0;
+		1 1 1 : 1;
+	endtable
+endprimitive
+\end{minted}
+e \verb|adder_riporto| in questo modo
+\begin{minted}{verilog}
+primitive adder_riporto(output r_out, input a, input b, input r_in);
+	table
+		0 0 0 : 0;
+		0 0 1 : 0;
+		0 1 0 : 0;
+		0 1 1 : 1;
+		1 0 0 : 0;
+		1 0 1 : 1;
+		1 1 0 : 1;
+		1 1 1 : 1;
+	endtable
+endprimitive
+\end{minted}
+A questo punto abbiamo un modulo che somma 2 bit con un 1 bit di riporto e ritorna 2 bit (somma e
+riporto). Per effettuare la somma di due sequenze da 2 bit possiamo usare due di questi moduli
+sommando i due bit meno significativi di ognuna delle due sequenze e dirottare il riporto
+nell'ingresso del riporto del secondo modulo.
+\begin{minted}{verilog}
+module adder2(s, r_out, r_in, a, b);
+	output [1:0]s;
+	output r_out;
+	input r_in;
+	input [1:0]a;
+	input [1:0]b;
+
+	wire rip;
+	adder a1(s[0], rip, r_in, a[0], b[0]);
+	adder a2(s[1], r_out, rip, a[1], b[1]);
+endmodule
+\end{minted}
+Ovviamente è possibile implementare \verb|adder_somma| e \verb|adder_riporto| sotto forma di
+espressioni booleane e il risultato sarebbe il medesimo.

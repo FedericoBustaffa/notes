@@ -1,0 +1,32 @@
+\documentclass[12pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage[hidelinks]{hyperref}
+\usepackage{../../packages/codestyle}
+
+\title{Relazione WORDLE}
+\author{Federico Bustaffa}
+\date{25/08/2023}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\newpage
+\begin{abstract}
+	La versione di WORDLE che ho deciso di implementare fa uso di varie tecniche di comunicazione
+	e di gestione dei canali, per riuscire ad avere il minor impatto possibile sulle risorse del
+	sistema (quando possibile).
+
+	In alcuni casi, per rendere il codice più compatto e leggibile, ho deciso di incapsulare alcune
+	funzionalità in oggetti che garantissero un'interfaccia più comoda e semplice da usare.
+\end{abstract}
+
+\include{server.tex}
+\include{client.tex}
+\include{utility.tex}
+\include{compilazione.tex}
+
+\end{document}

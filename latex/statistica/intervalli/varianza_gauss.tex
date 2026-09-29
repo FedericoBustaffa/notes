@@ -1,0 +1,46 @@
+\section{Varianza di un campione Gaussiano}
+Sia $X_1, \dots, X_n$ un campione i.i.d. di $X \sim N(\mu, \sigma^2)$, cerchiamo un intervallo
+per la varianza $\sigma^2$, occupandoci principalmente di intervalli unilateri. Come abbiamo visto,
+lo stimatore della varianza $\sigma^2$ è la varianza campionaria
+\[ S_n^2 = \frac{1}{n-1} \cdot \sum_{i=1}^n (X_i - \bar{X}_n)^2 \]
+
+\begin{proposition}
+	La variabile aleatoria
+	\[ \frac{(n-1) \cdot S_n^2}{\sigma^2} \sim \chi_{n-1}^2 \]
+	ha distribuzione Chi-Quadro a $n-1$ gradi di libertà, la quale si indica con $\chi_k^2$ e
+	ha densità
+	\[
+		f_k(x) = \begin{cases}
+			c_k \cdot x^{\frac{k}{2} - 1} \cdot e^{-x/2} & x > 0    \\
+			0                                            & x \leq 0
+		\end{cases}
+	\]
+\end{proposition}
+
+La distribuzione $\chi_k^2$ è asimmetrica che, all'aumentare di $k$, si schiaccia verso valori più
+grandi. Si può dimostrare che, prese $k$ variabili aleatorie Gaussiane standard indipendenti, vale
+\[ \sum_{i=1}^k Z_i^2 \sim \chi_k^2 \]
+e da questo fatto si può poi dimostrare che se $Q_k \sim \chi_k^2$, allora
+\[ \frac{C_k}{k} \to \E[Z_i^2] = 1 \quad \text{ e } \quad \frac{C_k - k}{\sqrt{2k}} \to N(0, 1) \]
+
+\begin{proposition}
+	Dato $X_1, \dots, X_n$ un campione i.i.d. di $X \sim N(\mu, \sigma^2)$ e dato $\alpha \in (0,1)$,
+	l'intervallo aleatorio
+	\begin{equation*}
+		\left( \left. 0, \quad
+		\frac{(n-1) \cdot S_n^2}{\chi_{\alpha, n-1}^2} \right] \right. =
+		\left( \left. 0, \quad
+		\frac{\sum_{i=1}^n (X_i - \bar{X}_n)^2}{\chi_{\alpha, n-1}^2} \right] \right.
+	\end{equation*}
+	è un intervallo di fiducia per $\sigma^2$ con livello di fiducia $1-\alpha$, con
+	$\chi_{\alpha, n-1}^2$ che è il quantile di ordine $\alpha$ di $\chi_{n-1}^2$.
+\end{proposition}
+
+Analogamente
+\begin{equation*}
+	\left[ \left. \frac{(n-1) \cdot S_n^2}{\chi_{1-\alpha, n-1}^2},
+	\quad +\infty \right) \right. =
+	\left[ \left. \frac{\sum_{i=1}^n (X_i - \bar{X}_n)^2}{\chi_{1-\alpha, n-1}^2},
+	\quad +\infty \right) \right.
+\end{equation*}
+è un intervallo di fiducia per $\sigma^2$ con livello di fiducia $1-\alpha$.

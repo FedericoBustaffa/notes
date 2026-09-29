@@ -1,0 +1,192 @@
+---
+id: logical_agents
+aliases: []
+tags:
+  - master
+  - ai_fundamentals
+---
+
+# Logical Agents
+
+A popular type of agents are **logical agents**, also called **knowledge-based**
+agents, which, as the name suggest, maintain a _knowledge base_ (KB) on the
+environment in the form of **logic sentences**.
+
+Typically they start with a general knowledge of the rules of the environment,
+but through perceptions they can add new knowledge and, most important, they can
+generate new knowledge by **inference**.
+
+This time we have a **declarative approach**, were the agent has a
+representation of the world which says what it knows, not what it does.
+
+## Entailment
+
+To understand how logical agents are able to infer new knowledge is necessary
+to define what a **possible model** (**world**) is. A possible model is a
+mathematical abstraction with a fixed truth value for each relevant sentence.
+
+If a sentence $\alpha$ is true in a model $m$ we say that $m$ **satisfies**
+$\alpha$ and $M(\alpha)$ is the set of all models of $\alpha$.
+
+The first piece for inference is the concept of **entailment**, that is defined
+as a relationship between sentences that is based semantically when a sentence
+logically follows another.
+
+More formally we say that $\alpha$ **entails** $\beta$:
+
+$$\alpha \models \beta$$
+
+that is equivalent to say that for every model where $\alpha$ is true then also
+$\beta$ is true. In this sense $\alpha$ is a stronger assertion than $\beta$ as
+it rules out more possible models.
+
+![Entailment](entailment.png)
+
+Entailment itself is defined semantically over all possible models, but in
+practice agents use inference rules to derive conclusions without enumerating
+models explicitly. In this way, inference allows the agent to restrict the
+possible worlds to those consistent with its knowledge.
+
+## Inference
+
+Now we want an **inference algorithm** capable of use entailment and classical
+logic laws, in order to generate new knowledge automatically. But first some
+definitions
+
+- **Equivalence**: $\alpha \equiv \beta$ if and only if $\alpha \models \beta$
+  and $\beta \models \alpha$.
+- **Validity**: a sentence is valid if it is true in all models.
+- **Satisfiability**: a sentence is **satisfiable** if is true in some model. It
+  is unsatisfiable if it is never true.
+
+If a sentence $\alpha$ is _derived_ from KB by the the inference algorithm
+$i$, then we can say that KB _infers_ $\alpha$:
+
+$$KB \vdash_i \alpha$$
+
+An inference algorithm can be
+
+- **Sound**: $KB \vdash_i \alpha \implies KB \models \alpha$
+- **Complete**: $KB \models \alpha \implies KB \vdash_i \alpha$
+
+In simple words, the soundness says that everything that can be derived
+syntactically is also semantically true. While the completeness says that
+everything that is semantically true can also be derived syntactically.
+
+### Model Checking
+
+The simplest way to verify entailment is via **model checking**, which consists
+in enumerating all the possible models and check whether $\alpha$ is true in all
+models in which KB is true.
+
+We enumerate all the possible models where KB is true, and all the possible
+models where $\alpha$ is true, considering also what we already know about the
+environment.
+
+![Entailment on Wumpus World|400](wumpus_entailment1.png)
+
+If the knowledge base rules out the sentence $\alpha$, then we obtain the
+possible models where the sentence is true and where all the knowledge is still
+true. In other words the intersection between the two represents all the
+possible realizations of sentences in the actual environment (based on the
+KB); what is outside the intersection cannot be true with respect to the KB.
+
+Let's notice that the KB models where $\alpha$ is true must be a subset of
+$\alpha$ in order to conclude that the sentence is true also for KB.
+
+![Entailment on Wumpus World|400](wumpus_entailment2.png)
+
+If the models of KB are not contained in the models of $\alpha$, the
+entailment does not hold. This is like saying that there are possible models
+where the sentence is true but, based on the KB and the perceptions, there are
+no guarantees that they will realize concretely.
+
+The simplest form for model checking is via **truth tables**, that tries to
+check if $KB \models \alpha$ by
+
+1. Generating, for all the symbols in both KB and $\alpha$, all the possible
+   assignments.
+2. Search for assignments that let KB be true and check if $\alpha$ is also
+   true.
+
+![Truth Table|600](truth_table_model_checking.png)
+
+Doing inference by enumeration is sound and complete but it costs $O(2^n)$ in
+time and space.
+
+### Resolution Inference
+
+Another way to proving a fact is via **inference rules**, that can be applied
+starting from the KB to derive the goal.
+
+Before seeing the algorithm a useful thing to do is convert any propositional
+logic statement in **conjunctive normal form** (**CNF**). In the CNF a
+**clause** is a disjunction of literals and the CNF itself is formed by
+conjuctions of clauses. Let's point out that is always possible to convert to
+CNF.
+
+Once converted in CNF is possible to use inference rules to inference some
+facts, the most important rules are
+
+- **Unit resolution**: that is used to delete a couple of complementary literals
+  $$
+  \frac{l_1 \lor \cdots \lor l_k, \; m}{l_1 \lor \cdots \lor l_{i-1} \lor
+  l_{i+1} \lor l_k}
+  $$
+  where $l_i$ and $m$ are complementary literals ($A \land \lnot A$).
+- **Full resolution**: that is used to delete multiple complementary literals
+  $$
+  \frac{l_1 \lor \cdots \lor l_k, \; m_1 \lor \cdots \lor m_n} {l_1 \lor \cdots
+  \lor l_{i-1} \lor l_{i+1} \lor \cdots \lor l_k \lor m_1 \lor \cdots \lor
+  m_{j-1} \lor m_{j+1} \cdots m_n}
+  $$
+  where $l_i$ and $m$ are complementary literals (e.g. $A$ and $\lnot A$).
+
+So we can now apply inference rules in order to be able to say if $KB \models
+\alpha$ by showing that $KB \land \lnot \alpha$ is unsatisfiable.
+
+1. Convert $KB \land \lnot \alpha$ to CNF.
+2. For all pairs of clauses
+   - Apply resolution clauses to generate new clauses
+   - If the _empty clause_ is generated then $KB \models \alpha$ since we have
+     generated a contradiction.
+3. If no new clauses are generated we can conclude that $KB \not\models \alpha$.
+
+Resolution is sound and complete for propositional logic.
+
+![Resolution Inference|700](resolution_inference.png)
+
+### Horn Clause Inference
+
+A particular CNF is called **Horn form** and is defined, as a classical CNF, as
+a conjuctions of clauses, with at most one positive symbol in each clause:
+
+$$(A \lor \lnot B) \land (\lnot A \lor \lnot C \lor D)$$
+
+Unfortunately is not always possible to convert in Horn form. The algorithm
+proceeds by creating a chain of implications by using _Modus Ponens_. This
+algorithms has linear complexity in time with respect to the size of the KB.
+
+There are two possible ways to run this algorithm: **forward chaining** and
+**backward chaining**:
+
+- In the _forward chaining_ we start from the fact, like from literals and their
+  truth values. Going on this process let us inference other facts; the
+  algorithm continues until it generates the goal sentence $\alpha$. If it did
+  not generate $\alpha$ yet and there are no more steps we can do, then we can
+  conclude that $KB \not\models \alpha$.
+- In the _backward chaining_ we start from the goal sentence and try to prove
+  only what it needs to our sentence to be true.
+
+The first is like a breath-first search: we start from facts but we don't know
+what is necessary to be proven in order to inference $\alpha$. At some point, if
+that's the case, we will conclude that $KB \models \alpha$.
+
+The second is like a depth-first search: we start from the sentence and so we
+now what it needs to be proven. So we can ignore other branches and continue
+until we encounter facts that make our sentence true (or until we reach a
+contraddiction).
+
+## References
+
+- [[artificial_intelligence_fundamentals]]

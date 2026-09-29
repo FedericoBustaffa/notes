@@ -1,0 +1,276 @@
+\chapter{Memoria}
+Fino ad ora abbiamo parlato di \textbf{memoria} considerandola quasi come un modulo interno alla
+ma come abbiamo visto all'inizio del corso nel modello Von Neumann, la memoria è un qualcosa di
+esterno che comunica con il processore.
+
+Nel tempo c'è stata una rapida evoluzione delle $\mu$-architetture dei processori con conseguente
+aumento delle prestazioni. Sebbene anche le memorie si siano evolute non si può dire che siano
+riuscite a reggere il confronto.
+
+Sempre come abbiamo visto nello schema iniziale del modello Von Neumann, un divario di prestazioni
+tra CPU e memoria, va a creare quello che prende il nome di \textbf{Von Neumann bottleneck} che
+rallenta anche le prestazioni del processore.
+
+Questo perché per quanto il nostro processore sia prestante, se non riusciamo a leggere e scrivere
+la memoria altrettanto velocemente, non riusciremo a sfruttare a pieno le potenzialità del
+processore.
+
+Quando abbiamo parlato di memoria abbiamo fatto distinzione tra \textbf{registri}, come latch, flip
+flop, registri da 1 bit e così via. Quelle che vogliamo trattare ora sono le \textbf{memorie} che
+in precedenza abbiamo distinto tra \emph{statiche} (array di registri) e \emph{dinamche} (array di
+transistor).
+
+Quello che vogliamo fare è sostanzialmente definire un \textbf{sistema di memoria} composto in
+maniera gerarchica
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.9]{circuiti/memorie.svg}
+\end{center}
+Come possiamo vedere abbiamo inserito un elemento di cui non avevamo mai parlato prima, ovvero la
+\textbf{cache} che, come vedremo ci aiuterà ad agevolare le interazioni con la memoria.
+
+\section{Cache}
+La memoria \textbf{cache} è una memoria piccola e molto veloce anche se non quanto i registri.
+Ci serve per memorizzare le istruzioni o i dati che soddisfano due criteri fondamentali:
+\begin{itemize}
+	\item \textbf{Località spaziale}: se accediamo una locazione di memoria è molto probabile che
+	      accederemo nel breve periodo anche le locazioni vicine.
+	\item \textbf{Località temporale}: se accediamo una locazione di memoria al tempo $t_0$ è molto
+	      probabile che ad un certo tempo $t_k$, con $k$ piccolo, acceda nuovamente alla stessa
+	      locazione di memoria.
+\end{itemize}
+La cache non fa parte dello schema che di solito facciamo per la $\mu$-architettura di un
+processore ma fa comunque parte della CPU. Possiamo infatti definire un ulteriore schema gerarchico
+di cache in questo modo
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/cache_gen.svg}
+\end{center}
+Come possiamo vedere abbiamo tre livelli di cache, il primo livello è diviso in cache per le
+istruzioni e cache per i dati. Ora però dobbiamo capire come
+\begin{enumerate}
+	\item Muovere i dati tra i vari livelli della gerarchia.
+	\item Trovare i dati nella cache dato che non possiamo aspettarci di trovarli allo stesso
+	      indirizzo che usavamo per reperire i dati in RAM.
+\end{enumerate}
+Iniziamo con il risolvere il secondo problema, capendo prima di tutto come è fatta una cache.
+Possiamo vedere la cache come un insieme di \textbf{linee} o \textbf{blocchi}, ognuna composta da
+più campi ma divisa in due parti principali:
+\begin{itemize}
+	\item L'ultima parte composta da un certo numero di parole.
+	\item La prima parte composta da informazioni riguardanti tali parole.
+\end{itemize}
+Supponendo di avere una cache capace di memorizzare $n \cdot k$ parole e composta da $k$ linee,
+ciascuna da $n$ parole. Il risultato sarebbe una cache in cui ogni linea è composta da un campo
+\textbf{tag} (che approfondiremo più avanti), $\log_2 (\# \text{blocchi})$ bit rappresentanti il
+numero di linea e $\log_2 (n)$ bit che rappresentano un offset, necessario a scegliere una delle
+$n$ parole nella linea. L'ultima parte della linea, come già detto, è composta dalle $n$ parole.
+
+\subsection{Indirizzamento diretto}
+Supponiamo di avere un programma \verb|main| caricato in memoria principale e supponiamo di
+disporre di una cache da 4 linee, ciascuna in grado di memorizzare 4 parole.
+
+Abbiamo quindi che ogni linea della cache ha una prima parte composta da 28 bit di \emph{tag}, 2
+bit per l'identificazione del numero di linea e 2 bit per l'offset.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.8] {circuiti/cache_word.svg}
+\end{center}
+
+Se ora effettuiamo il fetch della prima istruzione di \verb|main|, per i criteri di località
+precedentemente descritti, vorremmo memorizzare nella cache, non solo tale istruzione ma anche le
+successive 3, dato che in una linea della cache possiamo inserire 4 istruzioni.
+
+Per capire dove memorizzare queste parole nella cache utilizziamo il loro indirizzo e per ognuna di
+esse andiamo a vedere i 2 bit che indicano il numero di linea (supponiamo siano 01 per tutte e 4
+le parole) e gli ultimi 2 bit (da 00 a 11) per andare a trovare la colonna corretta.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.8]{circuiti/cache_load.svg}
+\end{center}
+Il campo \emph{tag} viene riempito con i primi 28 bit di \verb|main + 0| e inoltre si aggiunge un
+\textbf{bit di presenza} o \textbf{validità} per capire se il contenuto della linea è significativo
+o meno.
+
+Se ora eseguissimo il fetch di \verb|main + 1|, leggeremmo che gli ultimi 4 bit sono 0101, il che
+significa che dobbiamo andare a leggere la cache nella linea 1 con un offset di 1 per ottenere
+\verb|main + 1|. Se il tag della linea corrisponde al tag dell'indirizzo allora possiamo usare il
+valore trovato. Per recuperare dati da una cache il procedimento prevede quindi di
+\begin{enumerate}
+	\item Usare il numero di blocco dell'indirizzo per accedere alla linea corretta.
+	\item Confrontare i tag dell'indirizzo e della linea.
+	\item Se i tag corrispondono si usa l'offset per ricavare la parola.
+\end{enumerate}
+Ancora però non è chiaro l'utilità del campo \emph{tag} dato che abbiamo già un campo che
+identifica le righe e uno che identifica le colonne della cache.
+
+Per capirlo dobbiamo considerare che la nostra cache può contenere al massimo 16 parole. Se in
+cache abbiamo la parola all'indirizzo \verb|main + 0|, e ad un certo punto decidessimo di
+effettuare il fetch dell'istruzione \verb|main + 16|, otterremmo gli ultimi 4 bit uguali a quelli
+di \verb|main + 0|.
+
+Questo porterebbe ad un errore in quanto, cercando di recuperare la parola \verb|main + 16|, la
+ricerca nella cache ci fornirebbe la parola \verb|main + 0|. Notiamo però che \verb|main + 16| ha
+il quintultimo bit differente da \verb|main + 0| e, dato che quel bit andrebbe a far parte del tag,
+una volta confrontati i tag otterremo un discrepanza.
+
+Il tag dunque non serve per cercare le parole memorizzate nella cache ma serve per evitare possibili
+ambiguità.
+
+\subsubsection{Implementazione indirizzamento diretto}
+Una cache ad indirizzamento diretto utilizza $n+1$ moduli di memoria , dove $n$ è il numero di
+parole memorizzabili in ogni linea della cache. Nel nostro caso avremo quindi 5 moduli di memoria,
+un modulo per la memorizzazione dei tag e bit di presenza e gli altri 4 per la memorizzazione di
+parole ad offset diversi.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/cache_diretto.svg}
+\end{center}
+Come detto in precedenza, tramite il numero di blocco accediamo la riga di tutti i moduli. Ciò che
+viene letto dal modulo dei tag viene confrontato con il tag dell'indirizzo. Il risultato del
+confronto viene infine messo in \verb|NAND| con il bit di presenza. L'uscita del \verb|NAND| è 1
+in due casi:
+\begin{itemize}
+	\item Il bit di presenza è a 0 e dunque le parole nella linea non sono valide.
+	\item I tag sono diversi.
+\end{itemize}
+In entrambi i casi, quando l'uscita del \verb|NAND| è 1 viene generato quello che si dice un
+\textbf{fault}
+Se non viene generato alcun \emph{fault} possiamo andare a scegliere la parola corretta tra le 4
+lette, usando un multiplexer che prende come ingresso di controllo l'offset dell'indirizzo.
+
+Lo schema di sopra non è completo, infatti ci permette solamente di leggere parole dalla cache, sia
+che si tratti di istruzioni sia che si tratti di dati. Per riuscire a scrivere in cache non si fa
+altro che aggiungere un demultiplexer sopra i moduli di memoria, il quale, tramite il segnale di
+controllo dato dall'offset, inoltra un segnale di \verb|WE| al modulo su cui si desidera scrivere.
+
+Riassumendo, il procedimento per la lettura della cache di primo livello consiste in tre passaggi
+principali:
+\begin{enumerate}
+	\item Eseguire il fetch dell'istruzione.
+	\item Provare a leggere la cache per un accesso più rapido.
+	\item Da qui abbiamo due possibilità che dipendono dal verificarsi di un fault o meno:
+	      \begin{itemize}
+		      \item Se non si verificano fault si legge dalla cache e abbiamo terminato.
+		      \item Se si verifica un fault si leggono dalla memoria la parola cercata e tutte
+		            quelle che entrano in una linea. Si aggiorna infine la cache con i nuovi valori
+		            letti.
+	      \end{itemize}
+\end{enumerate}
+
+\subsubsection{Trashing}
+Il problema principale che affligge le cache a indirizzamento diretto è detto \textbf{trashing} e
+si presenta quando dobbiamo mappare sulla stessa linea degli indirizzi che servono nello stesso
+periodo dell'esecuzione del programma.
+
+Quando abbiamo parlato del tag abbiamo parlato del fatto che una stessa linea di cache potesse
+essere riscritta ciclicamente con indirizzi contenenti stesso numero di blocco ma diverso tag.
+
+Supponendo di avere un codice in cui viene eseguito molte volte un loop abbastanza lungo, è facile
+intuire che se la cache è piccola per il numero di istruzioni presenti nel loop questa verrà
+riempita e poi continuamente sovrascritta con le istruzioni del loop.
+
+Quando due istruzioni continuano a sovrascriversi a vicenda ad ogni ciclo, si ha una situazione di
+\emph{trashing} che, in una cache a indirizzamento diretto, non è possibile risolvere.
+
+\subsubsection{Interfaccia con la memoria principale}
+Rimane da capire come trasferire i dati dalla memoria principale alla cache. In realtà è molto
+semplice e basta usare uno schema simile a quello che abbiamo usato per leggere dati dalla cache e
+scriverli nei registri del processore.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7] {circuiti/ram_to_cache.svg}
+\end{center}
+Se una linea di cache può contenere $\sigma$ parole, quando si verifica un fault, dobbiamo
+effettuare $\sigma$ accessi alla memoria per aggiornare la cache e rispettare i criteri di località.
+
+Come possiamo notare però, si tratta di un modulo di memoria interlacciata (sez. \ref{ss: modulari})
+dal quale è possibile rimuovere il multiplexer scrivendo così in un colpo solo tutte le $\sigma$
+parole.
+
+\subsection{Indirizzamento associativo}
+Per una cache a \textbf{indirizzamento associativo} non abbiamo più i bit per identificare il numero
+di blocco: manteniamo i bit per l'offset e i rimanenti bit sono utilizzati per il tag e per il bit
+di presenza.
+
+Stavolta abbiamo uno schema in cui, ogni volta che effettuiamo una lettura dalla cache mandiamo
+contemporaneamente tutti i tag della cache ognuno in un confrontatore insieme al tag dell'indirizzo.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7] {circuiti/cache_associativo.svg}
+\end{center}
+Così facendo effettuiamo un confronto simultaneo tra tutte le linee delle cache.
+\begin{itemize}
+	\item Nel caso tutti i confrontatori restituiscano 0 si ha un fault. Questo significa che
+	      il tag dell'indirizzo cercato non corrisponde con nessuno di quelli presenti nella cache.
+	\item Se invece si ottiene un 1 significa che l'indirizzo cercato è presente in cache e, per
+	      effettuare il test di validità, come prima mettiamo l'uscita del confrontatore in
+	      \verb|AND| con il bit di validità.
+\end{itemize}
+Per ottenere il fault vero e proprio manca in realtà un passaggio, ossia mettere le $\sigma$ uscite
+dei confrontatori in \verb|AND| con il bit di validità. A questo punto possiamo mettere tutto in un
+\verb|NOR| il cui output a 1 equivale ad un fault.
+
+\subsubsection{Leggere parole dalla cache}
+Nel caso non si verifichi un fault dobbiamo riuscire a recuperare la parola desiderata e per farlo
+sfruttiamo un \textbf{codificatore}, il quale possiede $2^k$ ingressi e produce $k$ bit in uscita,
+i rappresentano in binario la posizione dell'unico bit a 1.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.8]{circuiti/encoder.svg}
+\end{center}
+L'uscita del codificatore viene utilizzata come segnale di controllo per un multiplexer che va a
+scegliere la linea giusta.
+
+Per riuscire a scegliere la parola tra le $\sigma$ parole presenti sulla linea dobbiamo fare
+affidamento su un secondo multiplexer che riceve come ingresso di controllo l'offset. Un primo modo
+consiste nel posizionare il secondo multiplexer subito dopo il primo
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.8]{circuiti/associativo1.svg}
+\end{center}
+In questo modo però dobbiamo attendere l'esecuzione completa di tutta la logica dietro ai fault e
+solo dopo saremo in grado di inviare il segnale al primo multiplexer ed infine al secondo
+multiplexer per ottenere la parola cercata.
+
+Un secondo metodo prevede l'utilizzo di tanti multiplexer quante sono le linee della cache, il cui
+segnale di controllo è sempre l'offset. Facendo in questo modo il calcolo dell'offset può essere
+fatto parallelamente alla logica di fault.
+
+Una volta terminata quella parte possiamo inviare le uscite dei vari multiplexer al multiplexer che
+si occupa della scelta della linea corretta tramite il segnale ricevuto dal codificatore.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.8] {circuiti/associativo2.svg}
+\end{center}
+Questo secondo metodo è quello che viene più comunemente usato in quanto molto più rapido.
+
+Il problema delle cache a indirizzamento associativo è che sono incredibilmente costose. Andiamo
+infatti ad impiegare un numero di comparatori e multiplexer pari a quello delle righe. Abbiamo
+inoltre bisogno di un decodificatore con altrettanti ingressi.
+
+\subsection{Indirizzamento set-associativo}
+Per riuscire a trovare un buon compromesso tra prestazioni e componenti hardware si usa un modello
+ibrido chiamato \textbf{indirizzamento set-associativo}.
+
+La cache viene divisa in \textbf{insiemi} composti dallo stesso numero di righe. Quando si vuole
+leggere una parola nella cache si usa l'indirizzamento diretto per accedere all'insieme corretto e,
+una volta al suo interno utilizziamo l'indirizzamento associativo per leggere la parola.
+
+Questo metodo permette di ridurre drasticamente l'hardware usato infatti, come abbiamo visto il
+metodo diretto non richiede quasi niente a livello hardware e per quanto riguarda il metodo
+associativo possiamo usare un numero di confrontatori pari al numero di linee di un singolo insieme
+dato che effettuiamo sempre una lettura per volta della cache.
+
+\subsubsection{Trashing}
+Con questo metodo usiamo il tag per identificare l'insieme corretto e dunque abbiamo un singolo tag
+(quello dell'insieme) per tutte le righe dello stesso insieme.
+
+Il problema di \emph{trashing} che avevamo con il metodo diretto viene dunque mitigato dal poter
+inserire nello stesso insieme più indirizzi con lo stesso tag.
+
+\subsection{Politiche di scrittura nella cache}
+Quando la cache è piena bisogna andare a rimpiazzare una qualche linea. La scelta ricade ovviamente
+sulle linee più vecchie in quanto è probabile che stiano uscendo dalla località temporale e dunque
+potrebbero non servire più.
+
+Per farlo si adotta una politica \textbf{LRU} (\textbf{Last Recently Used}) che prevede l'utilizzo
+di un bit aggiuntivo per le linee, detto \textbf{bit d'uso}.
+
+Ogni volta che accediamo ad una parola della linea il bit d'uso viene messo ad 1 e periodicamente
+viene azzerato. Quando abbiamo bisogno di aggiornare la cache la nostra scelta ricadrà su una delle
+linee con il bit d'uso a 0.
+
+Questo metodo magari non è il più corretto per l'aggiornamento ma sicuramente necessario se lo
+paragoniamo all'alternativa in cui eseguiamo una scansione lineare della cache per individuare la
+linea più vecchia.

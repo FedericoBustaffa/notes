@@ -1,0 +1,122 @@
+{
+  "notes/ai_fundamentals/novelty.md": {
+    "25af2674b917a2068906d37e139f2d05": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/ai_fundamentals/genetic_algorithms.md": {
+    "0c5088c349ce4e45ee9d393bc548e6b9": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/machine_learning/validation.md": {
+    "37ae7b309de40ee3b0b9b20d6e00c7aa": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "6ef531f9e7ed8bc86f8a6e602072c4b1": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/complex_systems/continuous_systems.md": {
+    "04c5ff91a9d7c5d4ad3cd30d7ce71d5e": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "931db095d5e583ce0f389ead7e79e379": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/machine_learning/neural_networks.md": {
+    "1600768d300d46b22e9abc25199125bc": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "0e707ba775dd41e22ad4b2e491dbda86": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "9275538b54ee3a1655977cf6c98932ee": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/parallel_computing/shared_memory_systems.md": {
+    "ac0c3a97e8ebb48888b1f227d9362510": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/parallel_computing/stencil.md": {
+    "33b32e08b6bc44f03caf1d3120a01975": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "78c90a8fe8c1b3b9de0bca4062e7cbda": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/ai_fundamentals/artificial_life.md": {
+    "6423e496134e4c128af136656a095372": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "bf914257e9c027ce436db2fc74200104": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "aacddfd6d0b011b801dfe6a971e70017": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  },
+  "notes/machine_learning/support_vector_machine.md": {
+    "c4dbcf57d49ab2d771d10a0ed01b4cb0": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    },
+    "722cffbde2fa373f4f99581678cb264a": {
+      "position": "center",
+      "width": "",
+      "height": "",
+      "wrap": false
+    }
+  }
+}

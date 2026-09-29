@@ -1,0 +1,186 @@
+\chapter{Ricerca locale} \label{chapter: ricerca_locale}
+La ricerca nell'intero spazio degli stati, che sia sistematica o con euristica,
+\`e troppo costosa. In questo capitolo andremo a parlare di metodi di \textbf{ricerca locale},
+che saranno molto utili in seguito per gestire ambienti parzialmente osservabili e azioni non
+deterministiche.
+
+Gli algoritmi che vedremo inseriscono loro stessi elementi di casualit\`a ad esempio per venire
+fuori da una situazione di stallo, tuttavia il problema, cos\`i come il suo spazio degli stati,
+rimangono invariati dall'inizio alla fine.
+
+Nel prossimo capitolo tratteremo problemi il cui spazio degli stati varia \textbf{dinamicamente} nel tempo.
+
+\subsubsection{Algoritmi di ricerca locale}
+Gli algoritmi visti fino ad ora esplorano gli spazi di ricerca alla ricerca di un
+goal e restituiscono un \emph{cammino soluzione}. Ma a volte la soluzione del problema
+coincide con lo stato goal. Gli algoritmi di ricerca locale sono adatti per problemi in
+cui:
+\begin{itemize}
+	\item La sequenza di azioni non \`e importante: quello che conta \`e unicamente
+	      lo stato goal.
+	\item Tutti gli elementi della soluzione sono nello stato ma alcuni vincoli sono
+	      violati.
+\end{itemize}
+Gli algoritmi di ricerca locale in generale:
+\begin{itemize}
+	\item Non sono sistematici.
+	\item Tengono traccia solo del nodo corrente e si spostano sui nodi adiacenti.
+	\item Non tengono traccia dei cammini, dunque
+	      \begin{itemize}
+		      \item Sono efficienti in memoria.
+		      \item Possono trovare soluzioni ragionevoli anche in spazi molto grandi e
+		            infiniti (come nel continuo).
+	      \end{itemize}
+	\item Sono utili per risolvere problemi di ottimizzazione, come trovare:
+	      \begin{itemize}
+		      \item Lo stato migliore secondo una funzione obbiettivo.
+		      \item Lo stato di costo minore.
+	      \end{itemize}
+\end{itemize}
+
+\section{Hill climbing}
+\`E una ricerca locale di tipo greedy. Vengono generati i successori e valutati. Il successore
+viene scelto se migliora lo stato attuale. Ci sono tre sottocategorie di questo algoritmo che
+dipendono dalla modalit\`a di scelta del successore:
+\begin{itemize}
+	\item Se viene scelto il successore migliore abbiamo un \textbf{Hill climbing a salita rapida}.
+	\item Se ne viene preso uno a caso tra quelli che migliorano lo stato abbiamo un
+	      \textbf{Hill climbing stocastico}.
+	\item Se viene scelto il primo successore che migliora lo stato abbiamo un
+	      \textbf{Hill climbing con prima scelta}.
+\end{itemize}
+Se nessuno dei successori \`e migliore l'algoritmo fallisce.
+
+\begin{lstlisting}[style=pseudo-style]
+Hill_climbing(problem)
+	node = problem.start_state;
+	while true
+		successor = node.bestSuccessor()
+		if successor.value <= node.value then
+			return node.value;
+		node = successor;
+\end{lstlisting}
+
+\subsubsection{Massimi e minimi locali}
+Questo algoritmo ha per\`o a che fare con il problema dei \textbf{massimi e minimi locali}, ovvero
+si potrebbe arrivare ad un punto in cui nessun successore migliora lo stato facendo cos\`i terminare
+l'algoritmo senza arrivare all'ottimo, ovvero il \textbf{massimo o minimo globale} che potrebbe
+trovarsi pi\`u avanti.
+
+\subsubsection{Miglioramenti per Hill climbing}
+\begin{itemize}
+	\item Consentire un numero limitato di mosse \textbf{laterali}, ovvero si continua anche
+	      a parit\`a di $h$.
+	\item \textbf{Hill climbing stocastico}: si sceglie a caso tra le mosse in salita (se il problema
+	      \`e trovare un minimo) per provare a superare il minimo locale e riuscire a proseguire.
+	\item \textbf{Hill climbing con prima scelta}: si sceglie il primo successore che migliora lo stato
+	      attuale.
+	\item \textbf{Hill climbing con riavvio casuale}: si riparte da un punto passato. Se la probabilit\`a
+	      di successo \`e $p$, saranno necessarie in media $1 / p$ ripartenze per trovare la soluzione.
+	      \`E tendenzialmente completo ma se ci sono molti minimi/massimi locali si blocca spesso.
+\end{itemize}
+
+\section{Tempra simulata}
+Questo algoritmo \`e in analogia con il processo di tempra dei metalli in metallurgia. I metalli vengono
+portati a temperature molto elevate e raffreddati gradualmente consentendo di cristallizzare in uno stato
+a pi\`u bassa energia.
+
+L'algoritmo di \textbf{tempra simulata} combina Hill climbing con una scelta stocastica (non del tutto
+casuale).
+\subsubsection{Parametri}
+Per simulare al meglio il processo abbiamo bisogno di alcuni parametri:
+\begin{itemize}
+	\item $T$: \`e la temperatura. Decresce col progredire dell'algoritmo secondo un piano definito.
+	\item $\Delta E$: corrisponde alla variazione dell'energia. Equivale a $f(n') - f(n)$.
+	\item $p$: probabilit\`a del nodo $n'$ di essere scelto. Equivale a $p = e^{\Delta E / T}$ ed \`e
+	      compresa tra 0 e 1.
+\end{itemize}
+
+\subsubsection{Procedimento}
+Ad ogni passo si sceglie un successore $n'$ a caso:
+\begin{itemize}
+	\item Se migliora lo stato corrente viene espanso.
+	\item Altrimenti (caso $\Delta E = f(n') - f(n) < 0$) quel nodo viene scelto con probabilit\`a: $p = e^{\Delta E / T}$.
+	      Si genera un numero casuale compreso tra 0 e 1: se \`e $< p$ allora viene scelto come successore, altrimenti no.
+\end{itemize}
+Dunque $p$ \`e inversamente proporzionale al peggioramento. Infatti se la mossa peggiora molto, $\Delta E$ sar\`a un negativo
+molto alto che abbasser\`a molto il valore di $p$.
+
+Come gi\`a detto in precedenza $T$ decresce col progredire dell'algoritmo facendo cos\`i abbassare anche il valore di $p$ rendendo
+Progredendo rende pi\`u improbabili mosse peggiorative. Il valore iniziale di $T$ \`e tale che, per valori medi di $\Delta E$, la
+probabilit\`a $p$ sia $0.5$ circa.
+
+\subsubsection{Analisi}
+La probabilit\`a di una mossa in discesa diminuisce col passare del tempo e l'algoritmo si comporta sempre di pi\`u come Hill climbing.
+Se $T$ viene decrementato abbastanza lentamente, con probabilit\`a tendente a 1, si raggiunge l'ottimo.
+
+\section{Local Beam}
+\`E una versione locale di Beam Search in cui si tengono in memoria $k$ stati, anzich\'e uno solo. Ad ogni passo si generano i successori
+di tutti i $k$ stati: se si trova un goal ci si ferma, altrimenti si prosegue con i $k$ migliori tra questi.
+
+\subsection{Local Beam stocastica}
+Si introduce un elemento di casualit\`a. Si scelgono $k$ successori ma con probabilit\`a maggiore per i migliori.
+
+\section{Algoritmi genetici}
+Sono varianti della Beam Search stocastica in cui gli stati successori sono ottenuti combinando due stati genitore.
+Introduciamo una nuova terminologia:
+\begin{itemize}
+	\item \textbf{individui}: stati.
+	\item \textbf{popolazione}: insieme di individui.
+	\item \textbf{fitness}: funzione di valutazione degli individui.
+	\item \textbf{accoppiamenti}: crossover tra due individui.
+	\item \textbf{mutazione genetica}: elemento casuale inserito nello stato successore.
+	\item \textbf{generazioni}: popolazione successiva ad una popolazione di stati genitore.
+\end{itemize}
+
+\subsubsection{Procedimento}
+\begin{enumerate}
+	\item Abbiamo la popolazione iniziale composta da $k$ individui generati casualmente. Ogni individuo \`e rappresentato come una stringa.
+	\item Gli individui sono valutati da una funzione fitness.
+	\item Si selezionano gli individui per gli accoppiamenti con una probabilit\`a proporzionale alla fitness.
+	\item Le coppie danno vita alla generazione successiva:
+	      \begin{itemize}
+		      \item Combinando materiale genetico (crossover).
+		      \item Mutazione genetica (casuale).
+	      \end{itemize}
+	\item La popolazione ottenuta dovrebbe essere migliore.
+	\item Si ripete fino ad ottenere stati abbastanza buoni (stato obbiettivo).
+\end{enumerate}
+
+\subsubsection{Pro}
+Gli algoritmi di questo tipo:
+\begin{itemize}
+	\item Hanno la tendenza a salire della Beam Search stocastica.
+	\item Favoriscono l'interscambio di informazioni tra thread paralleli di ricerca.
+	\item Funzionano meglio se il problema ha componenti significative rappresentate in sottostringhe.
+\end{itemize}
+
+\subsubsection{Contro}
+Il punto critico di questi algoritmi \`e proprio la rappresentazione del problema in stringhe.
+
+\section{Ricerca negli spazi continui}
+Molti casi reali hanno spazi di ricerca continua che hanno quindi un fattore di ramificazione infinito. I tipi di ricerca visti fino
+ad ora non sono quindi opzioni valide per questo tipo di problemi.
+
+L'approccio che invece viene utilizzato ci porta a descrivere lo stato con \textbf{variabili continue} e \textbf{vettori}.
+
+Per trovare il minimo o il massimo di una funzione \emph{continua} e \emph{differenziabile} viene utilizzato il \textbf{gradiente},
+che restituisce la direzione di massima pendenza in un determinato punto.
+
+\begin{definition}
+	Data una funzione obbiettivo $f$, il gradiente \`e definito come il vettore che ha per componenti le derivate parziali rispetto alle
+	variabili della funzione:
+	\[ \nabla f(x_1, \dots, x_k) = ((f_{x_1}(x_1, \dots, x_k), \dots, f_{x_k}(x_1, \dots, x_k))) \]
+	dove $f_{x_i}$ \`e la derivata parziale rispetto alla variabile $x_i$.
+\end{definition}
+
+In generale si procede con un Hill climbing iterativo in cui si sceglie il successore in questo modo
+\[ x_{\text{new}} = x \pm \eta \nabla f (x) \]
+Dove $\eta$ \`e la dimensione del passo da compiere. Se devo salire, dunque massimizzare il valore cercato svolgo un'operazione di somma,
+se devo scendere faccio la differenza (ecco perch\'e ho messo $\pm$ nella formula).
+
+Questo algoritmo quantifica lo spostamento senza cercarlo tra gli infiniti possibili successori. Mi dice quindi di quanto spostarmi.
+Se vado oltre il massimo o il minimo il segno dell'operazione si inverte e torno indietro.
+
+La dimensione del passo $\eta$ dev'essere scelta correttamente: troppo grande fa fare passi troppo ampi e si rischia di non arrivare mai all'ottimo,
+troppo piccolo fa fare passi troppo piccoli e si ha una ricerca troppo lenta.

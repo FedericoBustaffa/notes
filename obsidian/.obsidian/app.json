@@ -1,0 +1,23 @@
+{
+  "showLineNumber": true,
+  "alwaysUpdateLinks": true,
+  "pdfExportSettings": {
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 80
+  },
+  "useTab": true,
+  "vimMode": true,
+  "livePreview": false,
+  "strictLineBreaks": true,
+  "smartIndentList": true,
+  "tabSize": 4,
+  "defaultViewMode": "preview",
+  "showInlineTitle": false,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "notes",
+  "attachmentFolderPath": "files",
+  "promptDelete": false,
+  "useMarkdownLinks": false
+}

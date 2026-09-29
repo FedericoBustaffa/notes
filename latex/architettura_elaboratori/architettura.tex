@@ -1,0 +1,95 @@
+\documentclass[12pt]{report}
+
+\input{style}
+\input{math}
+\input{tikz}
+
+\usepackage{minted}
+\usepackage{diagbox}
+\usepackage[label=corner]{karnaugh-map}
+\usepackage{svg}
+
+\definecolor{minted_bg}{rgb}{0.9, 0.9, 0.9}
+\usemintedstyle{colorful}
+
+\setminted[c]{
+	tabsize=4,
+	% linenos=true,
+	bgcolor=minted_bg,
+	fontsize=\small,
+	mathescape=true
+}
+
+\setminted[gas]{
+	tabsize=4,
+	% linenos=true,
+	bgcolor=minted_bg,
+	fontsize=\small,
+	mathescape=true
+}
+
+\setminted[bash]{
+	tabsize=4,
+	% linenos=true,
+	bgcolor=minted_bg,
+	fontsize=\small,
+	mathescape=true
+}
+
+\setminted[verilog]{
+	tabsize=4,
+	% linenos=true,
+	bgcolor=minted_bg,
+	fontsize=\small,
+	mathescape=true
+}
+
+\title{Architettura degli elaboratori}
+\author{Federico Bustaffa}
+\date{13/11/2023}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\include{intro}
+
+% PARTE 1: Reti logiche
+\include{1-binaria_bool/1.1-aritmetica_binaria}
+\include{1-binaria_bool/1.2-algebra_booleana}
+
+\include{2-combinatorie/2.1-tabelle}
+\include{2-combinatorie/2.2-algebra_bool}
+\include{2-combinatorie/2.3-karnaugh}
+
+\include{3-sequenziali/3.1-registri}
+\include{3-sequenziali/3.2-automi}
+
+\include{4-componenti_std/4.1-combinatorie}
+\include{4-componenti_std/4.2-sequenziali}
+
+\include{5-parallelismo/5.1-spaziale}
+\include{5-parallelismo/5.2-temporale}
+
+% PARTE 2: Architettura
+\include{6-assembler/6.1-intro}
+\include{6-assembler/6.2-istruzioni}
+\include{6-assembler/6.3-direttive}
+\include{6-assembler/6.4-costrutti}
+\include{6-assembler/6.5-funzioni}
+\include{6-assembler/6.6-formato}
+
+\include{7-micro_architettura/7.1-single_cycle}
+\include{7-micro_architettura/7.2-multi_cycle}
+\include{7-micro_architettura/7.3-pipeline}
+\include{7-micro_architettura/7.4-superscalare}
+\include{7-micro_architettura/7.5-multi_core_thread}
+
+\include{8-memoria/8.1-cache}
+\include{8-memoria/8.2-virtuale}
+
+\include{9-input_output/9.1-memory_mapped_IO}
+\include{9-input_output/9.2-interruzioni}
+
+\end{document}

@@ -1,0 +1,490 @@
+\section{Convergenza}
+Cerchiamo ora di capire come scegliere $M$ ed $N$, come capire quando un metodo è convergente e che cosa
+significa dire che un metodo è convergente. Prendiamo ad esempio la matrice quadrata $A$ definita come segue
+\[
+	A = \begin{bmatrix}
+		0 & 1 \\
+		1 & 0
+	\end{bmatrix}
+\]
+In questo caso non possiamo usare il metodo di Jacobi e quindi nemmeno quello di Gauss-Seidel dato che la
+matrice $A$ ha tutti 0 sulla diagonale principale. Ma la condizione necessaria affinché la successione
+converga è che $M$ sia invertibile. Possiamo quindi definire $M$ ed $N$ come segue
+\[
+	M = \begin{bmatrix}
+		0 & 1 \\
+		1 & 0
+	\end{bmatrix} \quad
+	N = \begin{bmatrix}
+		0 & 0 \\
+		0 & 0
+	\end{bmatrix}
+\]
+In questo caso la matrice $P$ è la matrice nulla
+\[
+	P = M^{-1} N = \begin{bmatrix}
+		0 & 0 \\
+		0 & 0
+	\end{bmatrix}
+\]
+Abbiamo quindi che il vettore $x$ al tempo $k+1$ si ricava calcolando
+\[ x^{(k+1)} P x^{(k)} + q = P x^{(k)} + M^{-1} b \]
+Questa successione, partendo da un vettore $x^{(0)} \in \R^n$, è costante in quanto
+\[ x^{(k+1)} M^{-1} b \]
+e quindi converge a $M^{-1} b$ per qualsiasi $x^{(0)} \in \R^n$ che è dunque la soluzione del sistema lineare.
+
+Consideriamo ora la stessa matrice $A$ ma scegliamo come $M$ l'identità. Ne segue che
+\[
+	N = M - A = \begin{bmatrix}
+		1  & -1 \\
+		-1 & 1
+	\end{bmatrix}
+\]
+Il vettore all'iterazione $k+1$ sarà quindi calcolato come segue
+\[
+	x^{(k+1)} = \begin{bmatrix}
+		1  & -1 \\
+		-1 & 1
+	\end{bmatrix} x^{(k)} + b
+\]
+Supponiamo inoltre che $b$ sia il vettore nullo, è facile dedurre che l'unica soluzione del sistema lineare è
+anch'essa un vettore nullo.
+
+Gli autovalori di $N$ sono $\lambda_1 = 0$ e $\lambda_2 = 2$. Gli autovettori relativi a tali autovalori sono
+\[ \begin{bmatrix} 1 \\ 1 \end{bmatrix}_{\lambda_1} \quad \begin{bmatrix} 1 \\ -1 \end{bmatrix}_{\lambda_2} \]
+Se ora scegliamo $x^{(0)}$ come l'autovettore relativo a $\lambda_1$ ricaviamo
+\[
+	x^{(1)} = \begin{bmatrix}
+		1  & -1 \\
+		-1 & 1
+	\end{bmatrix}
+	\begin{bmatrix} 1 \\ 1 \end{bmatrix} +
+	\begin{bmatrix} 0 \\ 0 \end{bmatrix} =
+	\begin{bmatrix} 0 \\ 0 \end{bmatrix}
+\]
+e tutti i vettori generati ai passi successivi sono vettori nulli. Ecco che la successione converge al vettore
+nullo, ossia la soluzione che stavamo cercando.
+
+Se invece scegliamo come vettore di partenza l'autovettore relativo a $\lambda_2$ allora otteniamo
+\[
+	x^{(1)} = \begin{bmatrix}
+		1  & -1 \\
+		-1 & 1
+	\end{bmatrix}
+	\begin{bmatrix} 1 \\ -1 \end{bmatrix} +
+	\begin{bmatrix} 0 \\ 0 \end{bmatrix} =
+	\begin{bmatrix} 2 \\ -2 \end{bmatrix}
+\]
+Andando avanti si nota che la successione diverge dal vettore nullo. Questo ci dice che la successione può
+convergere a divergere a seconda del vettore iniziale.
+
+\begin{definition}
+	Dato che, in generale, non si hanno informazione utili per scegliere il vettore iniziale, diciamo che il
+	metodo iterativo è \textbf{convergente} se le successione generate convergono per ogni scelta del vettore
+	iniziale.
+\end{definition}
+
+\begin{theorem}
+	Se esiste una norma matriciale indotta da una norma vettoriale $\norm{\cdot}$ tale che
+	\[ \norm{P} < 1 \]
+	allora il metodo è convergente.
+	\begin{proof}
+		Come sappiamo
+		\[ x^{(k+1)} = P x^{(k)} + q \]
+		e la soluzione del sistema lineare soddisfa
+		\[ x = P x + q \]
+		Se adesso sottraiamo la prima equazione alla seconda otteniamo
+		\[ x^{(k+1)} - x = P x^{(k)} - P x = P (x^{(k)} - x) \]
+		Se noi chiamiamo $e^{(k)}$ la differenza tra l'approssimazione alla $k$-esima iterazione e il vettore
+		soluzione
+		\[ e^{(k)} = x^{(k)} - x \]
+		otteniamo la relazione
+		\[ e^{(k+1)} = P e^{(k)} \]
+		per ogni $k \geq 0$. Questo ci dice inoltre che
+		\[ e^{(k+1)} = P e^{(k)} = P \cdot P e^{(k-1)} = \dots = P^{k+1} e^{(0)} \]
+		Passiamo ora alle norme vettoriali e otteniamo
+		\[
+			\norm{e^{(k+1)}} = \norm{P^{k+1} e^{(0)}} \leq
+			\norm{P^{k+1}} \norm{e^{(0)}} \leq \norm{P^{k+1}} \norm{e^{(0)}}
+		\]
+		per la quarta proprietà delle norme. Quindi per ogni norma vettoriale, considerando la sua norma
+		matriciale indotta vale
+		\[ 0 \leq \norm{e^{(k+1)}} \leq \norm{P}^{k+1} \cdot \norm{e^{(0)}} \]
+		Se considero una norma tale che $\norm{P} < 1$ allora
+		\[ \lim_{k \to +\infty} \norm{P}^{k+1} \norm{e^{(0)}} = 0 \]
+		E quindi, per il teorema del confronto
+		\[ \lim_{k \to +\infty} \norm{e^{(k+1)}} = 0 \]
+		qualunque sia $e^{(0)}$.
+	\end{proof}
+\end{theorem}
+
+\begin{example}
+	Sia $A$ la matrice definita come segue
+	\[
+		A = \begin{bmatrix}
+			3  & -1     &        &    \\
+			-1 & \ddots & \ddots &    \\
+			   & \ddots & \ddots & -1 \\
+			   &        & -1     & 3
+		\end{bmatrix}
+	\]
+	Il metodo di Jacobi, ad ogni passo costa $O(\nnz(A))$ ma per una matrice triadiagonale $\nnz(A) = n$ quindi
+	il costo complessivo di ogni passo del metodo è $O(n)$.
+
+	Vediamo ora se il metodo converge per tale matrice. Per il metodo la matrice $M$ equivale a $3I$, quindi
+	\[
+		N = M - A = \begin{bmatrix}
+			0 & 1      &        &   \\
+			1 & \ddots & \ddots &   \\
+			  & \ddots & \ddots & 1 \\
+			  &        & 1      & 0
+		\end{bmatrix}
+	\]
+	e la matrice $P$ si ottiene calcolando
+	\[
+		P = M^{-1} N = \begin{bmatrix}
+			0           & \frac{1}{3} &             &             \\
+			\frac{1}{3} & \ddots      & \ddots      &             \\
+			            & \ddots      & \ddots      & \frac{1}{3} \\
+			            &             & \frac{1}{3} & 0
+		\end{bmatrix}
+	\]
+	A questo punto proviamo a calcolare la norma infinto di $P$ (la norma 1 è uguale)
+	\[ \norm{P}_\infty = \norm{P}_1 = \frac{2}{3} < 1 \]
+	Quindi il metodo converge.
+\end{example}
+
+\begin{theorem}\label{th: convergenza_spettrale}
+	Sia $P$ la matrice di iterazione della matrice $A$ associata al sistema lineare $Ax = b$. Allora il metodo
+	iterativo è convergente se e solo se
+	\[ \rho (P) < 1 \]
+\end{theorem}
+
+\begin{example}
+	Sia $A$ la matrice definita come segue
+	\[
+		A = \begin{bmatrix}
+			1  &        &        & -\alpha \\
+			-1 & \ddots &        &         \\
+			   & \ddots & \ddots &         \\
+			   &        & -1     & 1
+		\end{bmatrix}
+	\]
+	Per tale matrice otteniamo una matrice di iterazione
+	\[
+		P = \begin{bmatrix}
+			  &        &   & \alpha \\
+			1 &        &   &        \\
+			  & \ddots &   &        \\
+			  &        & 1 &
+		\end{bmatrix}
+	\]
+	Se proviamo a calcolare la norma vediamo che essa è sempre maggiore di 1 e quindi non sappiamo nulla sulla
+	convergenza o meno del metodo. Proviamo quindi ad utilizzare il teorema \ref{th: convergenza_spettrale}
+	calcolando $\rho (P)$.
+
+	Per calcolare il raggio spettrale di $P$ dobbiamo calcolare gli autovalori e quindi il polinomio
+	caratteristico, che risulta uguale a
+	\[ \det(\lambda I - P) = \lambda^n - \alpha \]
+	Dato che a noi interessa il modulo degli autovalori possiamo dire che
+	\[ |\lambda| = \sqrt[n]{|\alpha|} \]
+	e dunque il metodo converge quando
+	\[
+		\sqrt[n]{|\alpha|} < 1 \quad
+		\Leftrightarrow \quad |\alpha| < 1 \quad
+		\Leftrightarrow \quad -1 < \alpha < 1
+	\]
+	Proviamo ora a vedere qual'è la condizione di convergenza per il metodo di Gauss-Seidel. Abbiamo le matrici
+	$M$ ed $N$ così definite
+	\[
+		M = \begin{bmatrix}
+			1  &        &            \\
+			-1 & \ddots &            \\
+			   & \ddots & \ddots     \\
+			   &        & -1     & 1
+		\end{bmatrix} \quad
+		N = \begin{bmatrix}
+			 &  & \alpha \\
+			 &  &
+		\end{bmatrix}
+	\]
+	La matrice di iterazione $P$ sarà una matrice tutta nulla tranne che per l'ultima colonna, calcolabile
+	tramite la risoluzione del sistema lineare
+	\[ A x = N_n \]
+	dove $N_n$ è l'ultima colonna di $N$. Ricaviamo quindi
+	\[
+		P = \begin{bmatrix}
+			 &  &  & \alpha \\
+			 &  &  & \vdots \\
+			 &  &  & \alpha
+		\end{bmatrix}
+	\]
+	Gli autovalori di questa matrice sono 0 e $\alpha$ e quindi
+	\[ \rho(P) = |\alpha| \]
+	La condizione di convergenza è quindi la stessa del metodo di Jacobi in questo caso
+	\[ -1 < \alpha < 1 \]
+	Osserviamo però che i raggi spettrali delle due matrici di iterazione per i due metodi sono differenti
+	\[ \rho(G) = |\alpha| \quad \rho(J) = \sqrt[n]{|\alpha|} \]
+	Supponendo di essere in condizioni di convergenza ($|\alpha| < 1$) abbiamo che
+	\[ \rho(G) \ll \rho(J) \]
+	Questo si traduce in una convergenza più rapida per il metodo di Gauss-Seidel (in questo caso).
+\end{example}
+
+\begin{example}
+	Consideriamo ora la matrice
+	\[
+		A = \begin{bmatrix}
+			n      & -1     & \dots  & -1     \\
+			-1     & \ddots & \ddots & \vdots \\
+			\vdots & \ddots & \ddots & -1     \\
+			-1     & \dots  & -1     & n
+		\end{bmatrix}
+	\]
+	Proviamo a capire se il metodo di Jacobi applicato a questa matrice è convergente. Ricaviamo le matrici $M$
+	ed $N$
+	\[
+		M = \begin{bmatrix}
+			n &        &   \\
+			  & \ddots &   \\
+			  &        & n
+		\end{bmatrix} \quad
+		N = M - A = \begin{bmatrix}
+			       & 1      & \dots  & 1      \\
+			1      &        & \ddots & \vdots \\
+			\vdots & \ddots &        & 1      \\
+			1      & \dots  & 1      &
+		\end{bmatrix}
+	\]
+	La matrice di iterazione è quindi
+	\[
+		P = M^{-1} N = \begin{bmatrix}
+			            & \frac{1}{n} & \dots       & \frac{1}{n} \\
+			\frac{1}{n} &             & \ddots      & \vdots      \\
+			\vdots      & \ddots      &             & \frac{1}{n} \\
+			\frac{1}{n} & \dots       & \frac{1}{n} &
+		\end{bmatrix}
+	\]
+	Non ci rimane che calcolare la norma di questa matrice per vedere se il metodo converge
+	\[ \norm{P}_\infty = \norm{P}_1 = \frac{n-1}{n} < 1 \]
+	dunque il metodo converge.
+
+	Vogliamo ora determinare un numero $k$ di iterazioni tale che l'errore al passo $k$-esimo fratto l'errore
+	al passo iniziale per il metodo di Jacobi sia minore o uguale di $10^{-12}$, ossia $k$ tale che
+	\[ \frac{\norm{e^{(k)}}_\infty}{\norm{e^{(0)}}_\infty} \leq 10^{-12} \]
+	Ricordiamoci che l'errore al passo $k$-esimo equivale a
+	\[ e^{(k)} = P^k e^{(0)} \]
+	Quindi possiamo dire che
+	\begin{align*}
+		\norm{e^{(k)}}_\infty                               & \leq \norm{P}_\infty^k \cdot \norm{e^{(0)}}_\infty \\
+		                                                    & \Downarrow                                         \\
+		\frac{\norm{e^{(k)}}_\infty}{\norm{e^{(0)}}_\infty} & \leq \norm{P}_\infty^k
+	\end{align*}
+	Nel metodo di Jacobi la norma infinito della matrice di iterazione vale
+	\begin{align*}
+		\norm{P}                                            & = \frac{n-1}{n}                     \\
+		                                                    & \Downarrow                          \\
+		\norm{P}_\infty^k                                   & = \left( \frac{n-1}{n} \right)^k    \\
+		                                                    & \Downarrow                          \\
+		\frac{\norm{e^{(k)}}_\infty}{\norm{e^{(0)}}_\infty} & \leq \left( \frac{n-1}{n} \right)^k
+	\end{align*}
+	Non ci rimane che determinare $k$ tale che
+	\[ \left( \frac{n-1}{n} \right)^k \leq 10^{-12} \]
+	Per farlo proseguiamo in questo modo
+	\begin{align*}
+		\left( \frac{n-1}{n} \right)^k                          & \leq 10^{-12}             \\
+		\log_{10} \left( \left( \frac{n-1}{n} \right)^k \right) & \leq \log_{10} (10^{-12}) \\
+		k \cdot \log_{10} \left( \frac{n-1}{n} \right)          & \leq -12                  \\
+		k                                                       & \geq \frac{-12}{\log_{10}
+			\left( \frac{n-1}{n} \right)}
+	\end{align*}
+	Ecco che ci basta prendere come $k$
+	\[ k = \left\lceil \frac{-12}{\log_{10} \left( \frac{n-1}{n} \right)} \right\rceil \]
+	ossia la parte intera superiore del membro a destra della disequazione.
+\end{example}
+
+\subsection{Convergenza per matrici predominanti diagonali}
+Vogliamo ora dimostrare che se una matrice $A$ è predominante diagonale allora i metodi di Jacobi e di
+Gauss-Seidel sono convergenti. Questo ci permette di evitare qualsiasi valutazione sulla matrice di iterazione.
+
+Se una matrice è predominante diagonale allora gli elementi diagonali hanno modulo strettamente maggiore di 0
+e quindi diverso da 0. I metodi di Jacobi e di Gauss-Seidel sono dunque applicabili.
+
+\begin{theorem}
+	Se una matrice $A$ è predominante diagonale allora i metodi di Jacobi e Gauss-Seidel sono convergenti.
+	\begin{proof}
+		Ricordiamo che la condizione necessaria e sufficiente per la convergenza di un metodo è
+		\[ \rho(P) < 1 \]
+		Analizziamo quindi gli autovalori della matrice di iterazione $P = M^{-1} N$. Per farlo dobbiamo
+		calcolare il polinomio caratteristico, ossia
+		\begin{align*}
+			p(\lambda) = & \det(M^{-1} N - \lambda I)             \\
+			=            & \det(M^{-1} N - \lambda M^{-1} M)      \\
+			=            & \det(M^{-1} (N - \lambda M))           \\
+			=            & \det(M^{-1}) \cdot \det(N - \lambda M)
+		\end{align*}
+		Ricordiamo che $\lambda$ è un autovalore se e solo se la matrice $\lambda M - N$ è singolare. L'idea
+		per dimostrare il teorema sta nel dimostrare che se abbiamo un $|\lambda| \geq 1$ allora $\lambda M - N$
+		è predominante diagonale, dunque invertibile. Ecco che quindi gli autovalori devono avere tutti modulo
+		minore di 1.
+
+		Per il metodo di Jacobi la matrice $M$ è la diagonale principale di $A$
+		\[
+			M = \begin{bmatrix}
+				a_{1,1} &        &         \\
+				        & \ddots &         \\
+				        &        & a_{n,n}
+			\end{bmatrix}
+		\]
+		mentre $N = M - A$
+		\[
+			N = \begin{bmatrix}
+				         & -a_{1,2} & \dots      & -a_{1,n}   \\
+				-a_{2,1} &          & \ddots     & \vdots     \\
+				\vdots   & \ddots   &            & -a_{n-1,n} \\
+				-a_{n,1} & \dots    & -a_{n,n-1} &
+			\end{bmatrix}
+		\]
+		Ne segue che $\lambda M - N$ è definita in questo modo
+		\[
+			\lambda M - N = \begin{bmatrix}
+				\lambda a_{1,1} & a_{1,2} & \dots     & a_{1,n}         \\
+				a_{2,1}         & \ddots  & \ddots    & \vdots          \\
+				\vdots          & \ddots  & \ddots    & a_{n-1,n}       \\
+				a_{n,1}         & \dots   & a_{n,n-1} & \lambda a_{n,n}
+			\end{bmatrix}
+		\]
+		Dobbiamo quindi dimostrare che se $|\lambda| \geq 1$ allora la matrice è predominante diagonale. Che
+		equivale a dire
+		\[ |\lambda a_{i,i}| > \sum_{j=1, j \neq i}^{n} |a_{i,j}| \quad i=1, \dots, n \]
+		Osserviamo che
+		\[ |\lambda a_{i,i}| = |\lambda| \cdot |a_{i,i}| \]
+		Ma se $|\lambda| \geq 1$ allora
+		\[ |\lambda| \cdot |a_{i,i}| \geq |a_{i,i}| \]
+		Per la predominanza diagonale di $A$ abbiamo che
+		\[ |a_{i,i}| > \sum_{j=1, j \neq i}^n |a_{i,j}| \quad i=1, \dots, n \]
+		Quindi, se $A$ è predominante diagonale, anche $\lambda M - N$ lo è per $|\lambda| \geq 1$ quindi tutti
+		gli autovalori devono avere modulo inferiore a 1.
+
+		La matrice $M$ per Gauss-Seidel è la parte triangolare inferiore di $A$ ovvero
+		\[
+			M = \begin{bmatrix}
+				a_{1,1} &        &         \\
+				\vdots  & \ddots &         \\
+				a_{n,1} & \dots  & a_{n,n}
+			\end{bmatrix}
+		\]
+		La matrice $N = M - A$ è quindi definita in questo modo
+		\[
+			N = \begin{bmatrix}
+				 & -a_{1,2} & \dots  & -a_{1,n}    \\
+				 &          & \ddots & \vdots      \\
+				 &          &        & -a_{n-1, n} \\
+				 &          &        &
+			\end{bmatrix}
+		\]
+		Come prima ricaviamo la matrice $\lambda M - N$
+		\[
+			\lambda M - N = \begin{bmatrix}
+				\lambda	a_{1,1}  & a_{1,2} & \dots  & a_{1,n}          \\
+				\vdots          & \ddots  & \ddots & \vdots           \\
+				\vdots          &         & \ddots & a_{n-1,n}        \\
+				\lambda a_{n,1} & \dots   & \dots  & \lambda a_{n, n}
+			\end{bmatrix}
+		\]
+		Come prima vogliamo dimostrare la predominanza diagonale di tale matrice per $|\lambda| \geq 1$, per
+		farlo scriviamo
+		\[ |\lambda a_{i,i}| > \sum_{j=1}^{i-1} |\lambda a_{i,j}| + \sum_{j=i+1}^n |a_{i,j}| \]
+		Dato che la matrice $A$ è predominante diagonale allora
+		\[ |a_{i,i}| > \sum_{j=1}^{i-1} |a_{i,j}| + \sum_{j=i+1}^n |a_{i,j}| \]
+		Se moltiplichiamo ambo i membri per $|\lambda|$ otteniamo
+		\begin{align*}
+			|\lambda| |a_{i,i}| > & |\lambda| \sum_{j=1}^{i-1} |a_{i,j}| + |\lambda| \sum_{j=i+1}^n |a_{i,j}| \\
+			|\lambda a_{i,i}| >   & \sum_{j=1}^{i-1} |\lambda a_{i,j}| + \sum_{j=i+1}^n |\lambda a_{i,j}|     \\
+			\geq                  & \sum_{j=1}^{i-1} |\lambda a_{i,j}| + \sum_{j=i+1}^n |a_{i,j}|
+		\end{align*}
+		Concludiamo quindi che entrambi i metodi convergono se la matrice $A$ è predominante diagonale.
+	\end{proof}
+\end{theorem}
+
+\begin{example}
+	Consideriamo la matrice $A$ definita in questo modo
+	\[
+		A = \begin{bmatrix}
+			1      & x_2    & \dots  & x_n \\
+			x_2    & \ddots &        &     \\
+			\vdots &        & \ddots &     \\
+			x_n    &        &        & 1
+		\end{bmatrix}
+	\]
+	La matrice è predominante diagonale se
+	\[ \sum_{i=2}^n |x_i| < 1 \]
+	Vogliamo ora determinare un numero $k$ di iterazioni per il metodo di Jacobi sufficienti a garantire che
+	\[ \frac{\norm{e^{(k)}}_\infty}{\norm{e^{(0)}}_\infty} \leq 2^{-52} \]
+	Dove $e^{(k)}$ equivale alla quantità
+	\[ P^k e^{(0)} = x^{(k)} - x \]
+	Vale quindi
+	\begin{align*}
+		\norm{e^{(k)}}  \leq                       & \norm{P^k} \cdot \norm{e^{(0)}} \\
+		\leq                                       & \norm{P}^k \cdot \norm{e^{(0)}} \\
+		\Updownarrow                               &                                 \\
+		\frac{\norm{e^{(k)}}}{\norm{e^{(0)}}} \leq & \norm{P}^k
+	\end{align*}
+	Ci basta utilizzare la norma infinito per ottenere
+	\[ \frac{\norm{e^{(k)}}_\infty}{\norm{e^{(0)}}_\infty} \leq \norm{P}_\infty^k \]
+	Per la nostra matrice $A$, la matrice $P$ del metodo di Jacobi è la seguente
+	\[
+		P = \begin{bmatrix}
+			       & x_2 & \dots & x_n \\
+			x_2    &     &       &     \\
+			\vdots &     &       &     \\
+			x_n    &     &       &
+		\end{bmatrix}
+	\]
+	La norma infinto è quindi molto semplice da calcolare ed equivale a
+	\[ \norm{P}_\infty = \sum_{i=2}^{n} |x_i| < 1 \]
+	Se ora riuscissimo a trovare un $k$ tale che $\norm{P}^k \leq 2^{-52}$, avremmo anche trovato un $k$ che
+	soddisfa la richiesta. Proseguiamo quindi in questo modo
+	\begin{align*}
+		\norm{P}_\infty^k \leq                & 2^{-52}                              \\
+		k \cdot \log_2 (\norm{P}_\infty) \leq & -52                                  \\
+		k \geq                                & -\frac{52}{\log_2 (\norm{P}_\infty)}
+	\end{align*}
+	Possiamo quindi prendere come numero di iterazioni necessario a soddisfare la richiesta
+	\[ k = \left\lceil -\frac{52}{\log_2 (\norm{P}_\infty)} \right\rceil \]
+	Vogliamo ora determinare per quali valori $x_2, \dots, x_n$ il metodo di Jacobi converge ($\rho (P) < 1$).
+	Osserviamo che la matrice ha rango 2 dunque abbiamo 2 autovalori diversi da 0. Possiamo provare a trovare un
+	autovettore imponendo la seguente relazione
+	\[
+		P \begin{bmatrix} v_1 \\ \vdots \\ v_n \end{bmatrix} =
+		\lambda \begin{bmatrix} v_1 \\ \vdots \\ v_n \end{bmatrix}
+	\]
+	Ricaviamo quindi un sistema in questa forma
+	\[
+		\begin{cases}
+			- (x_2 v_2 + \dots + x_n v_n) = & \lambda v_1 \\
+			-x_2 v_1 =                      & \lambda v_2 \\
+			\vdots                          & \vdots      \\
+			-x_n v_1 =                      & \lambda v_n
+		\end{cases}
+	\]
+	Se dividiamo per $\lambda$ tutte le equazioni tranne la prima otteniamo
+	\[
+		\begin{cases}
+			- (x_2 v_2 + \dots + x_n v_n) = & \lambda v_1              \\
+			v_2 =                           & -\frac{x_2 v_1}{\lambda} \\
+			\vdots                          & \vdots                   \\
+			v_n =                           & -\frac{x_n v_1}{\lambda}
+		\end{cases}
+	\]
+	Se ora sostituiamo $v_2, \dots, v_n$ nella prima equazione otteniamo
+	\begin{align*}
+		\frac{x_2^2 v_1}{\lambda} + \dots + \frac{x_n^2 v_1}{\lambda} = & \lambda v_1                      \\
+		x_2^2 v_1 + \dots + x_n^2 v_1 =                                 & \lambda^2 v_1                    \\
+		\lambda^2 =                                                     & x_2^2 + \dots + x_n^2            \\
+		\lambda =                                                       & \pm \sqrt{x_2^2 + \dots + x_n^2}
+	\end{align*}
+	Possiamo quindi dire che
+	\[ \rho(P) = \sqrt{x_2^2 + \dots + x_n^2} \]
+	Il metodo di Jacobi quindi converge se e solo se
+	\[ \norm{v}_2 < 1 \]
+\end{example}

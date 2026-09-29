@@ -1,0 +1,209 @@
+\chapter{Microarchitettura}
+Vogliamo ora mettere insieme ciò che abbiamo visto nella parte di reti logiche e in quella di
+assembler e cercare di progettare ed implementare un piccolo processore in grado di eseguire
+il famoso ciclo \emph{fetch-decode-execute} di cui abbiamo parlato all'inizio.
+
+Partiremo dalla modellazione di un processore di tipo \textbf{single cycle} e andando avanti
+andremo ad modellare anche processori di tipo \textbf{multi-cycle}, \textbf{pipeline} e
+\textbf{superscalari}.
+
+\section{Single cycle}
+Proviamo ora a capire come modellare e dunque definire la $\mu$-architettura di un processore
+\textbf{single cycle} in grado di eseguire alcune istruzioni di base tramite le reti combinatorie e
+sequenziali viste in precedenza.
+
+Al fine di ottenere il prima possibile una rappresentazione più generale della cosa ometteremo
+alcune cose che però andranno ad arricchire più avanti il nostro modello.
+
+Come abbiamo visto in assembler, abbiamo bisogno di lavorare con i registri del processore e, a
+seconda dei casi, dobbiamo interagire con la memoria per aggiornare o salvare tali valori. Il
+processore ha quindi bisogno di un modulo \verb|REG| per mantenere lo stato interno dei registri.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.8]{circuiti/reg.svg}
+\end{center}
+Abbiamo quindi un modulo per leggere e scrivere i registri del processore e che sarà indispensabile
+per compiere le operazioni aritmetico-logiche.
+
+Come sappiamo il registro \verb|r15| è il program counter ma quello che si trova all'interno del
+modulo \verb|REG| è una copia di un registro indipendente \verb|PC|.
+
+Per quanto riguarda la memoria, possiamo dividerla in due moduli principali per il momento: memoria
+\textbf{dati} (\verb|MD|) e memoria \textbf{istruzioni} (\verb|MI|). La memoria dati contiene tutte
+le variabili globali del nostro programma mentre la memoria istruzioni mantiene una sorta di
+tabella in cui troviamo una corrispondenza tra l'istruzione assembler e la rispettiva
+rappresentazione in linguaggio macchina.
+
+\subsection{Fetch-Decode-Execute di un'istruzione}
+Vogliamo ora modellare una $\mu$-architettura che riesca ad eseguire il fetch-decode-execute per la
+lettura della memoria tramite l'istruzione
+\begin{minted}{gas}
+ldr r1, [r2, #4]
+\end{minted}
+Tramite i moduli precedentemente definiti siamo in grado di produrre un modello in primo luogo
+dando come ingresso a \verb|MI| il contenuto di \verb|PC|
+\begin{center}
+	\includesvg[inkscapelatex=false]{circuiti/PC_to_MI.svg}
+\end{center}
+A questo punto l'uscita di \verb|MI| viene inoltrata in un modulo che chiameremo \verb|ISTR| che
+effettua la traduzione da codice assembler a linguaggio macchina, generando l'istruzione nel
+\hyperref[sz: formato]{formato} binario interpretabile dal processore.
+
+Una volta effettuata la conversione avremo un'istruzione in linguaggio macchina contenente (in
+questo caso) l'indirizzo di destinazione (\verb|r1|), il primo indirizzo sorgente (\verb|r2|) e
+l'offset (\verb|#4|). I primi due diventeranno l'input del modulo \verb|REG| mentre l'offset,
+rappresentato a 12 bit nel campo \verb|SRC2|, viene esteso a 32 bit tramite un modulo \verb|EXT|
+apposito.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/arch0.svg}
+\end{center}
+Fino ad ora abbiamo solo scritto i valori nei registri e esteso il valore dell'offset in formato a
+32 bit. Dato che vogliamo andare a scrivere nel registro \verb|r1| l'indirizzo di memoria in $r2+4$
+ci serve una ALU in grado di effettuare tale somma.
+
+Una volta effettuata la somma abbiamo a disposizione l'indirizzo $r2 + 4$ con il quale possiamo
+accedere il modulo \verb|MD|, ricavare l'informazione desiderata e andarla a scrivere nel registro
+\verb|r1|.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/arch1.svg}
+\end{center}
+Come possiamo vedere dal disegno l'output di \verb|MD| diventa l'input di \verb|REG| che, avendo
+come tra gli ingressi l'indirizzo \verb|r1| come registro destinazione, va a scrivere il valore
+ricavato da \verb|MD| in \verb|r1|.
+
+Questa prima bozza rappresenta ovviamente un modello parziale che potremmo arricchire andando per
+esempio ad aggiungere la possibilità di eseguire un'istruzione di lettura dalla memoria di questo
+tipo
+\begin{minted}{gas}
+ldr r1, [r2, r0]
+\end{minted}
+In questo caso il campo \verb|SRC2| avrà negli ultimi 4 bit l'indirizzo del registro \verb|r0| da
+cui sarà possibile andare a leggere il valore dell'offset.
+
+Quello che dobbiamo fare ora è aggiungere al circuito la seconda uscita di \verb|REG| e mandarla in
+un multiplexer in grado di decidere se usare il valore di quell'uscita o il valore \emph{immediato}
+in uscita da \verb|EXT|.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/arch2.svg}
+\end{center}
+Il bit che serve al multiplexer per effettuare la selezione è il campo \verb|I| dell'istruzione
+assembler convertita in binario.
+
+\subsubsection{Incrementare il program counter}
+Siamo quindi in grado di eseguire un'istruzione di lettura della memoria ma non di eseguirne
+tante in sequenza. Dobbiamo infatti riuscire ad implementare un ciclo infinito dentro il quale
+effettuiamo le operazioni di fetch-decode-execute. Per farlo è necessario incrementare il \verb|PC|
+di 4 (poiché le istruzioni di 32 bit sono indirizzate al byte) tramite una ALU.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/cycle.svg}
+\end{center}
+Ora dobbiamo immaginarci che all'interno di un ciclo di clock abbiamo tutte le fasi descritte da
+questo circuito e solo quando le abbiamo completate, il clock torna alto, incrementiamo \verb|PC| e
+appena il clock torna stabile possiamo eseguire una nuova istruzione.
+
+\subsection{Scrittura della memoria}
+Quello che abbiamo visto fino ad ora permette solamente di effettuare un'operazione di \verb|ldr|
+che, come sappiamo, prende come primo parametro il registro di destinazione su cui scrivere. Se
+invece volessimo effettuare un'operazione di \verb|str|, il primo parametro sarebbe il registro
+sorgente.
+
+Con un'operazione di \verb|str| cambia anche l'interpretazione dell'istruzione in linguaggio
+macchina e dunque anche il modo di interazione con il modulo \verb|REG|.
+
+Abbiamo infatti che, nel caso di una \verb|ldr| mandiamo nell'ingresso \verb|ind B| di \verb|REG|
+l'indirizzo nel campo $R_m$ (sorgente), nel caso di una \verb|str| mandiamo nell'ingresso
+\verb|ind B| l'indirizzo nel campo $R_d$ (destinazione). Aggiungiamo quindi un multiplexer in grado
+di effettuare tale scelta.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/store.svg}
+\end{center}
+Ancora una volta il bit di scelta sarà ricavabile dall'istruzione in linguaggio macchina.
+
+\subsection{Istruzioni operative}
+Supponiamo ora di eseguire un'istruzione operativa, come una somma di questo tipo
+\begin{minted}{gas}
+add r1, r2, r3
+\end{minted}
+Abbiamo un registro destinazione \verb|r1|, dunque dovremo scrivere nel modulo \verb|REG| e abbiamo
+due registri sorgente di cui vogliamo sommare i valori.
+
+Usando lo schema costruito fino ad ora siamo in grado di effettuare tale somma tramite la ALU posta
+alle uscite di \verb|REG| e \verb|EXT|. Il problema è che il risultato viene mandato all'interno
+della memoria dati e dunque non scriveremmo in \verb|r1| il valore \verb|r2 + r3| ma andremmo a
+prendere il valore che in memoria si trova all'indirizzo \verb|r2 + r3|.
+
+Per riuscire a distinguere dunque istruzioni operative da quelle di accesso alla memoria è
+sufficiente aggiungere un multiplexer che prende come ingressi sia l'uscita della memoria dati sia
+l'uscita della ALU.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/operative.svg}
+\end{center}
+Così facendo, tramite un bit di controllo è possibile selezionare uno o l'altro risultato e andarlo
+a scrivere nel modulo \verb|REG|.
+
+Se avessimo volutto effettuare un'operazione di \verb|sub| il circuito rimarrebbe il solito ma
+dobbiamo aggiungere un bit di controllo sulla ALU per decidere se effettuare una somma o una
+sottrazione.
+
+\subsection{Istruzioni di salto}
+Se volessimo eseguire istruzioni di salto dovremmo sostanzialmente andare a cambiare il valore del
+program counter. Questo però non può essere fatto prima di essere passati dalla memoria istruzioni
+e aver tradotto l'istruzione in binario in modo da reperire l'immediato che definisce come
+effettuare il salto.
+
+Ricordiamoci inoltre che dentro il modulo \verb|REG| abbiamo il registro \verb|r15| che è una copia
+del valore del program counter. Andando quindi a reperire quel valore e sommandolo all'immediato
+definito negli ultimi 24 bit dell'istruzione otteniamo il nuovo valore di \verb|PC|.
+
+Per effettuare operazioni di salto dobbiamo sostanzialmente aggiungere due multiplexer: il primo in
+grado di capire se leggere o meno il registro \verb|r15| e il secondo in grado di distinguere il
+caso in cui il program counter viene incrementato normalmente o tramite un'istruzione di salto.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/salto.svg}
+\end{center}
+Come possiamo vedere il multiplexer che regola il primo ingresso di \verb|REG| può avere come
+uscita la costante 15 in quanto, nel caso di un'istruzione di salto, non andiamo a specificare in
+modo esplicito che vogliamo variare il \verb|PC|.
+
+L'altro multiplexer prende come ingressi le uscite delle due ALU, quella che effettua l'incremento
+standard e quella che somma al \verb|PC| l'offset specificato nell'istruzione.
+
+\subsection{Unità di controllo}
+Come possiamo vedere, tra multiplexer, ALU e memorie abbiamo un bel po' di moduli che hanno bisogno
+di un segnale di controllo in grado di definire il loro comportamento.
+
+Tali segnali sono generati e gestiti da una rete combinatoria chiamata \textbf{unità do controllo}
+che tramite l'istruzione la sequenza di bit rappresentante l'istruzione assembler riesce a inviare
+bit di controllo a multiplexer e ALU e segnali di \verb|WE| alle memorie esattamente quando serve.
+
+La ALU che effettua istruzioni operative produce inoltre i flag di condizione (memorizzati nel
+registro \verb|cpsr|) che invia all'unità di controllo in modo che questa abbia tutte le
+informazioni necessarie anche per operazioni condizionali.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7]{circuiti/ctrl_unit.svg}
+\end{center}
+All'interno dell'unità di controllo abbiamo due componenti principali: un \textbf{decoder} e una
+rete combinatoria che implementa la \textbf{logica condizionale}.
+
+Sia l'uno che l'altro hanno diversi ingressi provenienti dalla memoria istruzioni o dalla ALU che
+potrebbe settare i flag per le istruzioni condizionali.
+
+Affinché un'istruzione venga eseguita correttamente abbiamo bisogno che tutte le operazioni
+attuabili da questo modello (nel caso peggiore) stiano all'interno di un ciclo di clock. Se il
+ciclo di clock è ben definito, una volta che il segnale torna alto possiamo scrivere o leggere
+registri o memoria ed eseguire operazioni aritmetico-logiche.
+
+Supponendo di avere un ciclo di clock della durata di 1ns, possiamo dire di avere un frequenza di
+clock di 1GHz. Questo significa che se abbiamo un programma di $n$ istruzioni, il tempo di
+completamento sarà $n$ volte il ciclo di clock.
+
+Solitamente non consideriamo quanto tempo il singolo programma impiega a terminare ma consideriamo
+il \textbf{CPI} (Clock per Instruction) che, nel caso single cycle, equivale a 1.
+
+\subsection{Shift}
+Per le operazioni di \textbf{shift} in genere si usa un modulo chiamato \textbf{barrel shifter}
+posizionato tra \verb|REG| e la \verb|ALU|. Non lo si mette all'interno della ALU perché, come
+abbiamo visto, esistono delle istruzioni di accesso alla memoria che effettuano degli shift sul
+valore dei registri per trovare l'indirizzo giusto.
+
+Dobbiamo quindi effettuare prima gli eventuali shift logici o aritmetici e poi effettuare eventuali
+somme o sottrazioni.

@@ -1,0 +1,284 @@
+\section{Istruzioni}
+L'assembler è un linguaggio a basso livello con il quale possiamo programmare il nostro processore
+eseguendo \textbf{istruzioni}
+\begin{itemize}
+	\item Di \textbf{operative}: come somme, sottrazioni, shift, operazioni booleane e così via.
+	      Tali istruzioni operano sui registri interni al processore.
+	\item Di \textbf{accesso alla memoria} per manipolare i dati dai registri alla memoria e
+	      viceversa.
+	\item Di \textbf{controllo} o \textbf{salto}: costrutti equivalenti a \verb|IF-THEN-ELSE| e
+	      chiamate di funzione.
+\end{itemize}
+
+\subsection{Registri}
+I registri, in ARMv7, sono 16 (da 0 a 15), quelli da 0 a 12 hanno delle convenzioni ma sono sotto
+il completo controllo dell'utente, mentre gli ultimi tre sono registri \emph{speciali}:
+\begin{itemize}
+	\item \textbf{PC}: è il \textbf{program counter}, il quale contiene l'indirizzo dell'istruzione
+	      da eseguire.
+	\item \textbf{SP}: è lo \textbf{stack pointer}, utile per memorizzare l'indirizzo su cui si
+	      trova l'ultimo elemento inserito nello \emph{stack}.
+	\item \textbf{LR}: è il \textbf{link register} che viene utilizzato per le chiamate di funzione
+	      per mantenere l'\emph{indirizzo di ritorno}.
+\end{itemize}
+I restanti registri sono di più libero uso ma l'assembler ARM definisce delle \textbf{convenzioni}
+su di essi
+\begin{itemize}
+	\item I registri da 0 a 3 sono riservati per valori temporanei o per parametri di chiamate di
+	      funzione. Solitamente il registro 0 viene usato per il valore di ritorno di una funzione,
+	      mentre da 1 a 3 sono utilizzati come parametri attuali in una chiamata di funzione.
+	\item I registri da 4 a 11 servono a memorizzare le variabili. Dopo il loro utilizzo dobbiamo
+	      garantire che questi tornino ad avere il valore che avevano prima che venissero
+	      utilizzati salvandoli sullo stack.
+\end{itemize}
+Attenersi a tali convenzioni aiuta a garantire l'interoperabilità.
+
+\subsection{Istruzioni operative}
+Le istruzioni \textbf{operative} prendono come argomenti tre registri, il primo sarà il registro di
+\textbf{destinazione} e gli altri due saranno i registri \textbf{sorgente} da cui prenderemo i
+valori necessari a svolgere l'operazione desiderata. Tra le istruzioni più importanti abbiamo le
+operazioni di \textbf{calcolo}
+\begin{itemize}
+	\item \verb|ADD| e \verb|ADC|: addizione e addizione con riporto.
+	\item \verb|SUB| e \verb|RSB|: sottrazione e sottrazione inversa.
+\end{itemize}
+Tra le istruzioni \textbf{logiche} abbiamo invece
+\begin{itemize}
+	\item \verb|AND|: \verb|AND| logico
+	\item \verb|ORR|: \verb|OR| logico
+	\item \verb|EOR|: \verb|XOR|, sta per Exclusive OR.
+	\item \verb|BIC|: operazione di \emph{bit clear} la quale cancella dal secondo parametro i bit
+	      a 1 del terzo parametro.
+\end{itemize}
+Le istruzioni di \textbf{shift} sono sia di tipo logico che aritmetico
+\begin{itemize}
+	\item \verb|LSL| e \verb|LSR|: rispettivamente shift logico a sinistra e a destra.
+	\item \verb|ASL| e \verb|ASR|: rispettivamente shift aritmetico a sinistra e a destra.
+	\item \verb|ROR|: shift ciclico in cui i bit più a destra rientrano da sinistra.
+\end{itemize}
+Le istruzioni di \textbf{moltiplicazione} sono molteplici:
+\begin{itemize}
+	\item \verb|MUL|: come le altre istruzioni accetta tre parametri ma dato che il risultato
+	      sarebbe un numero a 64 bit considera solo i 32 bit meno significativi.
+	\item \verb|SMULL| e \verb|UMULL|: che eseguono rispettivamente la moltiplicazione per numeri
+	      con e senza segno ma stavolta mettono il risultato in due registri (infatti necessitano
+	      di quattro parametri di cui i primi due sono le destinazioni) restituendo così un valore
+	      a 64 bit.
+\end{itemize}
+Per quanto riguarda \textbf{la divisione non è supportata} nativamente dobbiamo quindi
+implementarla in qualche modo.
+
+Come ultima istruzione vediamo l'\textbf{assegnamento} (\verb|MOV|) che prende solo due parametri,
+la destinazione e la sorgente, andando a scrivere il valore della sorgente nella destinazione.
+
+\subsection{Istruzioni di accesso alla memoria}
+Per l'accesso alla memoria abbiamo due istruzioni principali (\verb|LOAD| e \verb|STORE|), le quali
+servono a muovere i dati dalla memoria ai registri e viceversa:
+\begin{itemize}
+	\item \verb|LDR|: da memoria a registro.
+	\item \verb|STR|: da registro a memoria.
+\end{itemize}
+L'istruzione di \verb|LOAD| prende come primo parametro un registro che sarà la destinazione,
+mentre la \verb|STORE| prenderà come primo parametro un registro che sarà la sorgente di cui
+leggeremo il contenuto.
+
+I parametri dopo il primo, sia per l'una che per l'altra istruzione possono variare a seconda dei
+casi, e servono ad definire l'indirizzo da cui leggere o scrivere dati.
+\begin{minted}{gas}
+ldr r0, [r1]
+\end{minted}
+va a leggere il contenuto della memoria all'indirizzo scritto in \verb|r1| e lo scrive in \verb|r0|.
+Supponiamo però di avere in \verb|r1| l'indirizzo in cui è presente un array, se volessimo prendere
+un valore all'interno dell'array senza perdere l'indirizzo in \verb|r1| possiamo fare in questo
+modo
+\begin{minted}{gas}
+ldr r0, [r1, r2]
+\end{minted}
+andando a specificare con \verb|r2| un offset e andando di fatto a leggere la memoria all'indirzzo
+\verb|r1 + r2| lasciando questi ultimi invariati. Al posto di \verb|r2| possiamo usare anche una
+costante numerica.
+
+La memoria in ARMv7 è \textbf{indirizzata al byte} e dato che consideriamo locazioni di memoria da
+32 bit, ossia 4 byte, l'operazione
+\begin{minted}{gas}
+ldr r0, [r1, #4]
+\end{minted}
+non legge il quarto elemento dell'array ma il secondo (abbiamo cioè un offset di una posizione).
+Per gestire gli indici in maniera più ragionevole esiste anche un altro modo per l'accesso alla
+memoria
+\begin{minted}{gas}
+ldr r0, [r1, r2, lsl #2]
+\end{minted}
+che va a leggere la memoria all'indirizzo $r1 + r2 \times 4$. Supponiamo ora di voler scrivere in
+ARM un codice che in C scriveremmo in questo modo
+\begin{minted}{c}
+int x[16];
+sum = x[0] + x[1];	
+\end{minted}
+Supponiamo ora che la base di \verb|x| sia in \verb|r1| e vogliamo usare \verb|r2| come indice,
+quello che scriveremmo in ARM sarebbe
+\begin{minted}{gas}
+mov r2, #0
+ldr r3, [r1, r2]
+add r2, r2, #4
+ldr r4, [r1, r2]
+\end{minted}
+In termini più generali possiamo scrivere
+\begin{minted}{gas}
+ldr r3, [r1, r2]
+add r2, r2, #1
+ldr r3, [r1, r2, lsl #2]
+\end{minted}
+Dato che scorrere la memoria in modo sequenziale accade molto spesso abbiamo a disposizione dei
+costrutti che compattano il codice incrementando l'indice in automatico di una locazione di memoria
+\begin{minted}{gas}
+ldr r0, [r1, r2]!
+\end{minted}
+Questo di sopra è un meccanismo detto \textbf{pre-index} che va a mettere in \verb|r0| il contenuto
+della memoria all'indirizzo $r1 + r2$ e implicitamente mettiamo in \verb|r1| il valore di $r1 + r2$.
+In alternativa abbiamo il meccanismo di \textbf{post-index}
+\begin{minted}{gas}
+ldr r0, [r1], r2
+\end{minted}
+che, a differenza del pre-index, mette in \verb|r0| il valore in memoria all'indirizzo \verb|r1| e
+solo dopo aggiorna \verb|r1| con $r1 + r2$.
+
+Altre due implementazioni delle istruzioni di \verb|load| e \verb|store| sono \verb|ldrb| e
+\verb|strb| le quali caricano il primo byte indirizzato nella parte meno significativa del
+registro. Per esempio
+\begin{minted}{gas}
+ldrb r1, [r2]
+\end{minted}
+prende il primo byte del valore in memoria all'indirizzo \verb|r2| e lo scrive nella parte meno
+significativa del registro \verb|r1|.
+
+Esistono anche delle istruzioni per effettuare \verb|load| e \verb|store| di più registri che sono
+rispettivamente \verb|ldmxx| e \verb|stmxx| dove i due caratteri \verb|xx| devono essere sostituiti
+da una combinazione delle seguenti alternative
+\begin{itemize}
+	\item Al primo posto possiamo specificare \verb|f| (full), se vogliamo che il registro punti
+	      all'ultima posizione piena o \verb|e| (empty) se vogliamo che il registro punti alla
+	      prima posizione vuota.
+	\item Al secondo posto possiamo specificare \verb|d| (descending) per caricare o scaricare i
+	      dati in ordine decrescente o \verb|a| (ascending) per caricare o scaricare i dati in
+	      ordine crescente.
+\end{itemize}
+e dove di seguito abbiamo il primo argomento che è un registro e il secondo argomento è una lista
+di registri tra parentesi graffe. Per esempio
+\begin{minted}{gas}
+ldmfd sp!, {r1, r2, r3}
+stmfd sp!, {r1, r2, r3}
+\end{minted}
+carica e scarica nello stack pointer i registri tra parentesi graffe in ordine decrescente e
+incrementa lo stack pointer tramite il punto esclamativo. Dato che usare lo stack pointer in questo
+modo è molto frequente e utile possiamo usare due istruzioni equivalenti
+\begin{minted}{gas}
+pop {r1, r2, r3}
+push {r1, r2, r3}
+\end{minted}
+che scrivono e leggono lo stack pointer.
+
+\subsection{Esecuzione condizionale}
+Abbiamo a disposizione anche delle istruzioni condizionali che in sostanza vengono eseguite solo se
+una certa condizione è vera. Per esempio
+\begin{minted}{gas}
+addeq r0, r1, r2
+\end{minted}
+somma \verb|r1| ed \verb|r2| se e solo se i \textbf{flag di condizione} indicano che questi sono
+uguali. Se \verb|r1| ed \verb|r2| non sono uguali ma prima non si è fatto alcuna operazione per
+settare i flag di condizione se effettuerà la somma in ogni caso. Per ottenere il risultato atteso
+dovremmo fare in questo modo
+\begin{minted}{gas}
+cmp r1, r2
+addeq r0, r1, r2
+\end{minted}
+I flag di condizione sono quattro e sono contenuti nel registro chiamato \text{cpsw} (Current
+Program Status Word). I quattro flag sono \textbf{Negative}, \textbf{Zero}, \textbf{Carry} e
+\textbf{Overflow} e indicano se una specifica condizione si è verificata dopo un'operazione.
+
+Non solo l'operazione \verb|cmp| è in grado di settare i flag ma anche le operazioni aritmetiche
+seguite da una "\verb|s|", per esempio
+\begin{minted}{gas}
+adds r0, r1, r2
+\end{minted}
+setta i flag in base al risultato di $r1 + r2$. Supponiamo di voler implementare un programma
+equivalente al seguente programma C
+\begin{minted}{c}
+if (x + y == 0)
+	y++;
+\end{minted}
+Con le istruzioni ARM di base scriveremmo un codice di questo tipo
+\begin{minted}{gas}
+add r0, r1, r2
+cmp r0, #0
+bne fine // etichetta d'esempio
+add r2, r2, #1
+\end{minted}
+risparmiamo due righe di codice scrivendo
+\begin{minted}{gas}
+adds r0, r1, r2
+addeq r2, r2, #1
+\end{minted}
+Similmente al suffisso \verb|eq| abbiamo anche \verb|ne|, \verb|gt|, \verb|lt|, \verb|ge| e
+\verb|le| che rispettivamente fanno controlli su gli operandi tramite i seguenti operatori:
+$\neq$, $>$, $<$, $\geq$ e $\leq$.
+
+\subsection{Istruzioni di salto}
+Le istruzioni di salto le dividiamo in istruzioni di salto \textbf{condizionato} e
+\textbf{non condizionato}. Per quanto riguarda il salto incondizionato possiamo usare l'istruzione
+\verb|b| affiancata dall'etichetta a cui vogliamo andare
+\begin{minted}{gas}
+main:
+	b somma
+	sub r0, r1, r2
+
+somma:
+	add r0, r1, r2
+\end{minted}
+In questo esempio saltiamo l'operazione di sottrazione ed eseguiamo direttamente all'operazione di
+somma in modo incondizionato. Nel caso invece volessimo effettuare un salto condizionato potremmo
+fare in questo modo
+\begin{minted}{gas}
+main:
+	add r0, r1, r2
+	cmp r0, #0
+	bne azzera
+
+azzera:
+	mov r0, #0
+\end{minted}
+così che se il risultato della somma è diverso da 0 si salta all'etichetta che azzera il registro.
+Le lettere che possiamo inserire dopo "\verb|b|" sono le stesse che possiamo mettere dopo le
+operazioni aritmetiche condizionali.
+
+Se c'è la possibilità di implementare il nostro programma tramite istruzioni condizionali, queste
+sarebbero preferibili alle istruzioni di salto.
+
+Aggiungiamo inoltre che nel caso di processori pipeline e superscalari le operazioni di salto vanno
+a minare tutta l'ottimizzazione che questi due modelli offrono che invece hanno bisogno di eseguire
+le istruzioni in un certo ordine.
+
+Un'altra operazione di salto è la \textbf{branch and link} (\verb|bl|) che fa la stessa cosa del
+comando \verb|b| ma setta il link register scrivendoci dentro il valore del program counter
+avanzato di una posizione.
+\begin{minted}{gas}
+main:
+	mov r0, #0
+	mov r1, #1
+	mov r2, #2
+	
+	bl somma
+	cmp r0, #0
+	bne azzera
+	mov r0, r0
+
+somma:
+	add r0, r1, r2
+	mov pc, lr	// return
+
+azzera:
+	mov r0, #0
+\end{minted}
+Questo ci è molto utile per implementare chiamata e ritorno di funzione. L'ultima istruzione di
+salto che vediamo è la \verb|bx| seguita da un registro, che assegna al program counter il
+contenuto del registro.

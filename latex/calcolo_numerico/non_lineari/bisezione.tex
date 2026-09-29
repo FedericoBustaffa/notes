@@ -1,0 +1,157 @@
+\chapter{Equazioni non lineari}
+In questo capitolo andremo a trattare la risoluzione di \textbf{equazioni non lineari}, tipicamente del tipo
+\[ f : \R \to \R \quad \vee \quad f : [a, b] \to \R \]
+Risolvere un'equazione non lineare significa trovare tutti i valori della variabile $x$ tali che
+\[ f(x) = 0 \]
+Chiameremo questi valori \textbf{radici} dell'equazione o \textbf{zeri} della funzione. In generale, possiamo
+dire che una funzione non lineare è una qualsiasi funzione differente da
+\[ f(x) = a x + b \]
+ossia, dalla funzione che definisce una retta nel piano. Polinomi di grado superiore al primo nella variabile
+$x$, logaritmi, esponenziali, radici, seno e coseno sono tutte funzioni non lineari.
+
+L'obbiettivo di questa parte del corso è definire dei metodi che siano in grado di risolvere equazioni non
+lineari. Mentre per la risoluzione di sistemi lineari avevamo informazioni sulla risolvibilità del sistema
+come ad esempio l'\emph{invertibilità} della matrice stavolta non abbiamo garanzia che l'equazione abbia
+delle soluzioni né quante siano queste soluzioni.
+
+L'unico approccio che abbiamo per avere informazioni sulla funzione è di tipo grafico. Cerchiamo quindi di
+costruire il grafico della funzione per definire dove sono localizzate le soluzioni, di modo da poter procedere
+in modo più mirato all'approssimazione di tali soluzioni.
+
+\begin{example}
+	Consideriamo la seguente funzione $f$
+	\[ f = x^3 - 2x + 3 = 0 \]
+	Tale equazione ha 3 soluzioni su $\C$ ma noi siamo interessati ad un'analisi su $\R$ e dunque possiamo dire
+	che se c'è una soluzione complessa allora anche la sua coniugata è soluzione dell'equazione e in quel caso
+	avremmo una soluzione reale. Nel caso non ci siano soluzioni complesse allora ce ne sono 3 reali.
+
+	Per capire se l'equazione ha 1 o 3 soluzioni reali proviamo a tracciare un grafico approssimativo della
+	funzione. Per farlo possiamo, prima di tutto, calcolare i limiti agli estremi del campo di esistenza, che,
+	in questo caso è tutto $\R$.
+	\begin{align*}
+		\lim_{x \to +\infty} x^3 - 2x + 3 = & +\infty \\
+		\lim_{x \to -\infty} x^3 - 2x + 3 = & -\infty
+	\end{align*}
+	Altra cosa che possiamo fare è calcolare la derivata della funzione
+	\[ f'(x) = 3x^2 - 2 \]
+	Stavolta possiamo studiare facilmente il segno dato che ci troviamo davanti un'equazione di secondo grado
+	\[ 3x^2 - 2 = 0 \quad \Leftrightarrow \quad x = \pm \sqrt{\frac{2}{3}} \]
+	Ricaviamo quindi che la derivata è positiva per
+	\[ x < -\sqrt{\frac{2}{3}} \quad \vee \quad x > \sqrt{\frac{2}{3}} \]
+	mentre è negativa per
+	\[ -\sqrt{\frac{2}{3}} < x < \sqrt{\frac{2}{3}} \]
+	Ne segue che nell'intervallo di positività della derivata la funzione è crescente mentre in quello di
+	negatività la funzione è decrescente. Abbiamo inoltre un massimo locale in $-\sqrt{\frac{2}{3}}$ e un
+	minimo locale in $\sqrt{\frac{2}{3}}$.
+
+	Possiamo ora provare a tracciare un grafico approssimativo. Per prima cosa possiamo valutare la funzione in
+	$x = 0$ e vediamo che $f(0) = 3$. Dato che $-\sqrt{\frac{2}{3}} < 0 < \sqrt{\frac{2}{3}}$ possiamo dedurre
+	la funzione valutata in $-\sqrt{\frac{2}{3}}$ avrà valore positivo. Valutiamo invece la funzione in
+	$\sqrt{\frac{2}{3}}$ e otteniamo che
+	\[ f \left( \sqrt{\frac{2}{3}} \right) = \frac{2}{3} \sqrt{\frac{2}{3}} - 2 \sqrt{\frac{2}{3}} + 3 > 0 \]
+	Nel punto di minimo locale la funzione è positiva e quindi possiamo concludere che la funzione interseca
+	l'asse delle ascisse solo in un punto minore di $-\sqrt{\frac{2}{3}}$. Concludiamo che l'equazione ha una
+	sola soluzione $\alpha$ reale.
+
+	A questo dobbiamo cercare di definire un intervallo nel quale sia compreso $\alpha$. Per farlo possiamo
+	valutare la funzione in diversi punti finché non troviamo un $x$ tale che la funzione è negativa e uno
+	tale che la funzione è positiva. La nostra soluzione $\alpha$ si troverà da qualche parte in mezzo a questo
+	intervallo. Possiamo calcolare ad esempio
+	\[ f(-1) = 4 \quad \quad f(-2) = -1 \]
+	Possiamo quindi concludere che $\alpha \in [-2, -1]$.
+\end{example}
+
+\begin{definition}
+	Una funzione $f$ si dice di \textbf{classe} $C^k$ in $[a, b]$
+	\[ f \in C^k ([a, b]) \]
+	se è continua e derivabile $k$ volte nell'intervallo $[a, b]$ con tutte le derivate continue.
+\end{definition}
+
+Una funzione continua appartiene sicuramente alla classe $C^0$, una funzione continua e derivabile infinite volte
+con derivate continue appartiene alla classe $C^\infty$.
+
+La continuità di una funzione è un requisito minimo per la costruzione di un buon algoritmo di approssimazione
+degli zeri.
+
+\begin{theorem}[Esistenza degli zeri]
+	Sia $f : [a, b] \to \R$ e $f \in C^0 ([a, b])$. Se
+	\[ f(a) \cdot f(b) < 0 \]
+	allora esiste $\xi \in [a, b]$ tale che $f(\xi) = 0$.
+\end{theorem}
+
+Il teorema degli zeri non ci dice che esiste una sola soluzione, ma ci dice che ne esiste almeno una.
+
+\begin{definition}
+	Sia $f : [a, b] \to \R$ se esiste ed è unico $\xi \in [a, b]$ tale che $f(\xi) = 0$
+	allora definiamo $[a, b]$ \textbf{intervallo di separazione}.
+\end{definition}
+
+Tutti i metodi che vedremo non saranno di tipo diretto ma \emph{iterativi}. Andremo quindi a generare una
+successione che, sotto le opportune ipotesi, andrà a convergere nella soluzione. Definiremo anche un criterio
+di arresto per terminare l'algoritmo una volta raggiunto un certo livello di accuratezza dell'approssimazione.
+
+\section{Metodo di bisezione}
+Vediamo ora il metodo più semplice possibile per la risoluzione di equazioni non lineari, ossia il metodo di
+\textbf{bisezione}. Per poter applicare il metodo facciamo le seguenti assunzioni
+\begin{gather*}
+	f : [a,b] \to \R \\
+	f \in \C^0([a,b]) \\
+	f(a) \cdot f(b) < 0 \\
+	!\exists \xi \in [a, b] : f(\xi) = 0
+\end{gather*}
+Senza queste assunzioni il metodo potrebbe non convergere o fornirci risultati errati. Il metodo di bisezione
+si compone dei seguenti passi:
+\begin{enumerate}
+	\item Definire un intervallo di separazione che contiene una radice dell'equazione, quindi avente estremi
+	      tali che la funzione calcolata sui due estremi abbia segno discorde. Definiamo quindi un intervallo
+	      $[a, b]$ tale che
+	      \[ f(a) \cdot f(b) < 0 \]
+	\item Calcolare la funzione nel punto di mezzo $c = \frac{a + b}{2}$, ossia
+	      \[ y = f(c) \]
+	\item Se $y \cdot f(a)$ è positivo allora il nuovo intervallo diventa $[c, b]$, viceversa se è negativo
+	      il nuovo intervallo diventa $[a, c]$.
+	\item Si va avanti finché l'intervallo non è talmente piccolo che uno dei due estremi non approssima alla
+	      soluzione.
+\end{enumerate}
+
+\subsection{Valutazione dell'errore}
+Indichiamo con $a_k$ e con $b_k$ il valore dei due estremi alla $k$-esima iterazione. Osserviamo che
+\begin{itemize}
+	\item Se $f(a_k) \cdot f(b_k) < 0$ per ogni $k$ allora $\xi \in [a_k, b_k]$.
+	\item Il valore $b_k - a_k$ rappresenta l'ampiezza dell'intervallo. Tale ampiezza equivale alla metà
+	      dell'ampiezza dell'intervallo precedente
+	      \[ b_k - a_k = \sum_{i=1}^{k} \frac{b_{k-i} - a_{k-i}}{2^i} \]
+\end{itemize}
+Per poter fare una valutazione dell'errore possiamo osservare che
+\[ 0 \leq |a_k - \xi| \leq b_k - a_k \leq \frac{b_0 - a_0}{2^k} \]
+Dato che
+\[ \lim_{k \to +\infty} \frac{b_0 - a_0}{2^k} = 0 \]
+allora $a_k \to \xi$. Vale la stessa relazione anche per $b_k$
+\[ 0 \leq |a_k - \xi| \leq b_k - a_k \leq \frac{b_0 - a_0}{2^k} \]
+e come prima $b_k \to \xi$. Per $c_k$ vale invece
+\[ 0 \leq |a_k - \xi| \leq \frac{b_k - a_k}{2} \leq \frac{b_0 - a_0}{2^{k+1}} \]
+e anche in questo caso $c_k \to \xi$. Abbiamo quindi generato tre successioni che progressivamente convergono
+tutte a $\xi$.
+
+\subsection{Criterio di arresto}
+Per definire un criterio di arresto per il metodo di bisezione possiamo imporre la condizione
+\[ |x - \xi| \leq \epsilon \]
+che equivale a
+\[ \frac{b_0 - a_0}{2^k} \leq \epsilon \]
+Possiamo quindi determinare a priori il numero $k$ di iterazioni necessarie per ottenere una certa precisione
+nell'approssimazione
+\begin{align*}
+	\frac{b_0 - a_0}{2^k} \leq                            & \epsilon     \\
+	b_0 - a_0 \leq                                        & 2^k \epsilon \\
+	\frac{b_0 - a_0}{\epsilon} \leq                       & 2^k          \\
+	\log_2 \left( \frac{b_0 - a_0}{\epsilon} \right) \leq & k
+\end{align*}
+Per avere il numero di iterazioni basterà prendere
+\[ k = \left\lceil \log_2 \left( \frac{b_0 - a_0}{\epsilon} \right) \right\rceil \]
+Un altro criterio di arresto potrebbe essere
+\[ f(c_k) \leq \epsilon \]
+si va quindi a imporre che il valore della funzione calcolato nel punto di mezzo sia sufficientemente piccolo
+e quindi quanto più vicino a 0.
+
+Il metodo di bisezione ha il problema di essere generalmente lento in quanto deve compiere tante valutazioni
+della funzione.

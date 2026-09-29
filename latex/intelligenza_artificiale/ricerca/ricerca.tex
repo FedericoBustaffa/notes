@@ -1,0 +1,265 @@
+\chapter{Ricerca non informata} \label{chapter: ricerca non informata}
+La ricerca non informata, ovvero che non utilizza un'\emph{euristica} (vedremo nel capitolo
+\ref{chapter: euristica}) utilizza \textbf{algoritmi di ricerca} che prendono in input un
+problema e restituiscono un \textbf{cammino soluzione}, ovvero un cammino che porta dallo
+stato iniziale ad uno stato obbiettivo.
+
+Tali algoritmi vengono valutati in base al \textbf{costo di ricerca} di una soluzione e anche
+all'\textbf{efficienza} della soluzione trovata.
+
+\section{Ricerca della soluzione}
+Per trovare una soluzione si genera un \textbf{albero di ricerca} sovrapposto allo spazio
+degli stati (generato da possibili azioni).
+
+Ma come si genera l'albero di ricerca ?
+\begin{enumerate}
+	\item La radice dell'albero corrisponde allo stato iniziale.
+	\item Ad ogni passo si sceglie un nodo figlio del nodo corrente.
+	\item I figli del nodo corrente vengono inseriti nella \textbf{frontiera}, struttura
+	      dati dove vengono messi i nodi in attesa di essere visitati (approfondimento
+	      pi\`u avanti).
+	\item Estraiamo i nodi uno ad uno dalla frontiera per visitarli ripetendo il solito
+	      procedimento.
+	\item Ogni volta che visitiamo un nodo lo stiamo \textbf{espandendo}.
+\end{enumerate}
+Dobbiamo chiarire che un \emph{nodo} e uno \emph{stato} non sono la stessa cosa. Uno stato
+\`e un'osservazione sul mondo del problema. Un nodo \`e una componente dell'albero di
+ricerca e pu\`o capitare di avere pi\`u nodi con lo stesso stato.
+
+\subsection{Nodi dell'albero di ricerca}
+Un nodo \`e una struttura dati con quattro componenti:
+\begin{itemize}
+	\item Stato
+	\item Riferimento al padre
+	\item L'azione effettuata per generarlo
+	\item Il costo del cammino dal nodo iniziale, indicato con $g(n)$
+\end{itemize}
+
+\subsection{La struttura dati della frontiera}
+La \textbf{frontiera} \`e implementata come una lista che contiene i nodi in attesa di essere
+espansi (visitati). In generale, tale lista ha a disposizione le due funzioni \verb|pop| e
+\verb|push| per rimuovere e inserire nodi nella lista. Quello che cambia sono le possibili
+implementazioni della lista che daranno poi vita a diverse possibili strategie.
+
+Nello specifico posso adottare 3 politiche principali:
+\begin{itemize}
+	\item FIFO, per implementare una coda da cui estraggo l'elemento in testa e inserisco
+	      nuovi elementi in fondo (BF o Breadth-First).
+	\item LIFO, per implementare una pila da cui estraggo l'elemento in testa e inserisco nuovi
+	      elementi sempre in testa (DF o Depht-First).
+	\item Coda con priorit\`a, in cui si estrae l'elemento a priorit\`a pi\`u alta e dopo
+	      l'inserimento di nuovi elementi si riordina tutta la coda in base alle priorit\`a
+	      (UC).
+\end{itemize}
+
+\subsection{Valutazione di una strategia di ricerca}
+Ci sono quattro parametri fondamentali per valutare una strategia:
+\begin{itemize}
+	\item \textbf{Completezza}: se la soluzione esiste viene trovata.
+	\item \textbf{Ottimalit\`a}: trova la soluzione migliore con costo minore.
+	\item \textbf{Complessit\`a in tempo}: tempo richiesto per trovare la soluzione.
+	\item \textbf{Complessit\`a in spazio}: memoria richiesta.
+\end{itemize}
+Introduciamo inoltre tre valori utili all'analisi degli algoritmi di ricerca che generano
+un albero di ricerca.
+\begin{itemize}
+	\item \textbf b: fattore di ramificazione (numero massimo di successori)
+	\item \textbf d: profondit\`a del nodo obbiettivo pi\`u vicino al nodo iniziale
+	\item \textbf m: lunghezza massima dei cammini nello spazio degli stati
+\end{itemize}
+
+\section{Tipologie di ricerca e strategie}
+Vedremo due tipologie di ricerca in particolare, la ricerca \textbf{su albero} e quella
+\textbf{su grafo}. Queste due tipologie rappresentano l'idea generale dell'algoritmo. Vedremo pi\`u
+avanti che esistono strategie pi\`u specifiche, valide per entrambe le tipologie che stiamo per
+descrivere, in grado di creare vari stili di ricerca con relativi pro e contro.
+
+\subsection{Ricerca su albero}
+L'algoritmo in questione ha la caratteristica di essere efficiente in memoria, tuttavia
+non tiene traccia dei nodi gi\`a visitati. Questo potrebbe portare l'algoritmo a compiere
+cammini ciclici da cui poi non si riuscirebbe pi\`u ad uscire.
+
+L'algoritmo si divide in 5 passi:
+\begin{enumerate}
+	\item Si sceglie uno stato iniziale e si mette nella frontiera.
+	\item Verifichiamo che la frontiera non sia vuota, se lo \`e, abbiamo esaurito tutti gli
+	      stati visitabili e quindi non c'\`e una soluzione e l'algoritmo termina con
+	      fallimento.
+	\item Si estrae un nodo dalla frontiera e controlliamo se lo stato \`e equivalente allo
+	      stato obbiettivo, se s\`i, l'algoritmo termina ritornando la soluzione.
+	\item Si inseriscono tutti i nodi figlio del nodo corrente nella frontiera.
+	\item Si torna al punto 2.
+\end{enumerate}
+
+\begin{lstlisting}[style=pseudo-style]
+TreeSearch (problem)
+	root = problem.start_state;
+	frontier.push(root);
+	while true
+		if frontier.IsEmpty() then
+			return FAIL;
+
+		node = frontier.pop();
+		if node.state == problem.goal then
+			return SOLUTION(node);
+		foreach action in problem.Actions(node.state)
+			successor = Node(problem, node, action);
+			frontier.push(successor);
+\end{lstlisting}
+
+\subsection{Ricerca su grafo}
+A differenza della ricerca su albero, la ricerca su grafo tiene traccia dei nodi gi\`a
+visitati. Il costo in spazio potrebbe essere tuttavia notevole.
+
+L'algoritmo non \`e molto diverso dal precendente e si divide in 6 passi:
+\begin{enumerate}
+	\item Si sceglie uno stato iniziale e si mette nella frontiera.
+	\item Verifichiamo che la frontiera non sia vuota, se lo \`e abbiamo esaurito tutti gli
+	      stati visitabili e quindi non c'\`e una soluzione e l'algoritmo termina con
+	      fallimento.
+	\item Si estrae un nodo dalla frontiera, se contiene lo stato obbiettivo l'algoritmo
+	      termina ritornando la soluzione.
+	\item Inserisco il nodo nella lista dei nodi esplorati.
+	\item Espando il nodo e inserisco i nodi figlio nella frontiera solo se non ci sono gi\`a
+	      e se non sono nemmeno nella lista dei nodi esplorati.
+	\item Si torna al punto 2.
+\end{enumerate}
+
+\begin{lstlisting}[style=pseudo-style]
+GraphSearch (problem)
+	root = problem.start_state;
+	frontier.push(root);
+	explored = [];
+	while true
+		if frontier.IsEmpty() then
+			return FAIL;
+		
+		node = frontier.pop();
+		explored.push(node.state);
+		foreach action in problem.Actions(node.state)
+			successor = Node(problem, node, action);
+			if successor.state not in explored and successor not in frontier then
+				if node.state == problem.goal then
+					return SOLUTION(node);
+				frontier.push(successor);
+\end{lstlisting}
+
+\section{Strategie di ricerca}
+Ora parliamo delle strategie che specializzano le due tipologie di ricerca viste precedentemente.
+L'algoritmo rimane sostanzialmente lo stesso, sia nel caso della ricerca su albero sia nel caso
+della ricerca su grafo. Ci\`o che realmente caratterizza una strategia \`e la diversa implementazione
+della frontiera.
+
+\subsection{Ricerca in ampiezza - BF}
+L'algoritmo BF compie una visita in ampiezza, ovvero, visita prima tutti i nodi
+successori del nodo estratto dalla frontiera, in seguito scende in profondit\`a e ripete il procedimento
+per ciascuno dei successori. Per creare questo tipo di algoritmo baster\`a implementare la frontiera come una lista
+con politica FIFO (coda).
+
+\subsubsection{Analisi BF}
+\begin{itemize}
+	\item \`E completo.
+	\item \`E ottimale se gli archi hanno tutti lo stesso costo $k$, cio\`e
+	      \[ g(n) = k \cdot depth(n) \]
+	\item La complessit\`a in tempo \`e $O(b^d)$.
+	\item La complessit\`a in spazio \`e $O(b^d)$.
+\end{itemize}
+
+\subsection{Ricerca in profondit\`a - DF}
+L'algoritmo di ricerca DF effettua una visita in profondit\`a, ovvero, continua a scendere
+in profondit\`a finch\'e non trova un nodo senza figli e quindi torna indietro fino alla
+prima diramazione da cui \`e possibile ricominciare a scendere. Ovviamente se si trova la
+soluzione ci si ferma prima. Per implementare questa strategia la frontiera sar\`a una
+lista con politica LIFO (pila).
+
+\subsubsection{Analisi DF su albero}
+\begin{itemize}
+	\item Non \`e completo.
+	\item Non \`e ottimale.
+	\item La complessit\`a in tempo \`e $O(b^m)$ (pu\`o essere maggiore di $O(b^d)$).
+	\item La complessit\`a in spazio \`e $O(bm)$.
+\end{itemize}
+\subsubsection{Analisi DF su grafo}
+\begin{itemize}
+	\item \`E completo in spazi di stati finiti.
+	\item Non \`e ottimale.
+	\item La complessit\`a in tempo \`e $O(b^m)$.
+	\item La complessit\`a in spazio \`e $O(b^m)$.
+\end{itemize}
+
+\subsection{DF ricorsiva su albero}
+Come prima non viene gestito il problema dei nodi gi\`a esplorati e in questo caso adotta un
+approccio di tipo ricorsivo, che fornisce un vantaggio in spazio visto che non dobbiamo
+salvarci in memoria gli stati ma vengono tenuti in uno stack in caso di fallimento.
+\begin{lstlisting}[style=pseudo-style]
+RecTreeSearchDF (problem, node)
+	if node.state == problem.goal then
+		return SOLUTION(node);
+
+	foreach action in problem.Action(node.state)
+		successor = Node(problem, node, action);
+		result = RecTreeSearchDF(problem, successor);
+		if result != FAIL then
+			return result;
+		return FAIL;
+\end{lstlisting}
+
+\subsection{Ricerca in profondit\`a limitata - DL}
+Questo algoritmo \`e una variante della DF in cui si da un limite di profondit\`a oltre
+il quale non si deve scendere.
+
+\subsubsection{Analisi DL}
+\begin{itemize}
+	\item \`E completo per problemi in cui si conosce un limite superiore per la profondit\`a
+	      della soluzione ($d < l$ dove $l$ \`e il limite di profondit\`a).
+	\item Non \`e ottimale.
+	\item La complessit\`a in tempo \`e $O(b^l)$.
+	\item La complessit\`a in spazio \`e $O(bl)$ su albero e $O(b^l)$ su grafo.
+\end{itemize}
+
+\subsection{Ricerca bidirezionale}
+Per la costruzione di nuove strategie possiamo porci il problema della direzione verso cui
+effettuare la ricerca.
+Da qui possono nascere due possibili approcci:
+\begin{itemize}
+	\item Ricerca \textbf{in avanti} (guidata dai dati), in cui si esplora lo spazio di
+	      ricerca dallo stato iniziale allo stato obbiettivo.
+	\item Ricerca \textbf{all'indietro} (guidata dall'obbiettivo), in cui si esplora lo
+	      spazio di ricerca partendo da uno stato goal e riconducendosi ad un sotto-goal
+	      fino a trovare uno stato iniziale.
+\end{itemize}
+In generale conviene procedere nella direzione in cui il \emph{fattore di diramazione}
+\`e minore.
+Pi\`u nello specifico, si preferisce la ricerca
+\begin{itemize}
+	\item \textbf{in avanti} quando gli obbiettivi possibili sono molti e abbiamo una
+	      serie di dati da cui partire.
+	\item \textbf{all'indietro} quando l'obbiettivo \`e chiaramento definito o si possono
+	      formulare una serie limitata di passi di ipotesi, oppure quando i dati del
+	      problema non sono noti e la loro acquisizione pu\`o essere guidata
+	      dall'obbiettivo.
+\end{itemize}
+Nella \textbf{ricerca bidirezionale} si procede nelle due direzioni fino ad incontrarsi.
+
+\subsubsection{Analisi ricerca bidirezionale}
+\begin{itemize}
+	\item La complessit\`a in tempo \`e $O(b^{d/2})$ assumendo test di intersezione in
+	      tempo costante.
+	\item La complessit\`a in spazio \`e $O(b^{d/2})$.
+\end{itemize}
+
+\subsection{Ricerca di costo uniforme - UC}
+\`E una generalizzazione di BF in cui la frontiera \`e implementata come una coda di priorit\`a nella
+quale verranno messi in testa i nodi meno costosi da raggiungere dal nodo corrente.
+
+Questo algoritmo funziona bene con archi di costo variabile poich\'e il suo scopo \`e visitare prima i
+cammini di costo minore.
+
+\subsubsection{Analisi UC}
+\begin{itemize}
+	\item \`E completo e ottimale a patto che il costo degli archi sia maggiore di un certo
+	      $\epsilon > 0$.
+	\item Assunto $C^*$ come costo della soluzione ottima, il numero di mosse nel caso peggiore \`e
+	      $\lfloor C^*/\epsilon \rfloor$.
+	\item Le complessit\`a in tempo e spazio sono $O(b^{1+\lfloor C^*/\epsilon \rfloor})$.
+\end{itemize}

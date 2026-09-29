@@ -1,0 +1,69 @@
+\section{Multicore e multithreading}
+Una nuova classe di processori è quella dei processori \textbf{multithread} e \textbf{multicore}
+(o multiprocess), i quali amplificano ancora di più il grado di parallelismo spaziale ma in un modo
+differente dai superscalari.
+
+Entrambi i modelli gestiscono flussi di controllo \textbf{indipendenti} ma differiscono per lo
+spazio di indirizzamento che vanno ad accedere.
+\begin{itemize}
+	\item I processori multithread eseguono istruzioni appartenenti allo stesso spazio di
+	      indirizzamento \textbf{condiviso}.
+	\item I processori multicore eseguono istruzioni appartenenti a spazi di indirizzamento
+	      \textbf{differenti}.
+\end{itemize}
+A differenza del superscalare che provava a eseguire più istruzioni contemporaneamente ma comunque
+era legato al flusso di esecuzione del nostro programma, questi modelli si propongono di eseguire
+flussi di esecuzioni differenti in modo indipendente.
+
+\subsection{Multithreading}
+Il modello multithread cerca di eseguire più flussi in contemporanea che però condividono lo stesso
+spazio di indirizzamento. Nella pratica andiamo a replicare lo stato architetturale $n$ volte. Se
+per esempio avessimo un livello di multithreading pari a 2 avremmo grosso modo un modello in cui
+parti come \verb|PC| e \verb|REG| sono doppie ma in cui la memoria rimane unica.
+\begin{center}
+	\includesvg[inkscapelatex=false, scale=0.7] {circuiti/multithread.svg}
+\end{center}
+Quello che viene fatto è alternare, secondo politiche scelte in fase di progettazione, l'esecuzione
+di uno o l'altro flusso di esecuzione utilizzando unità di controllo che determinano il
+comportamento dei multiplexer.
+
+\subsection{Dipendenze}
+Si potrebbe pensare che uno stile architetturale del genere possa essere ancora più pesante dal
+punto di vista delle dipendenze ma, in realtà, può addirittura alleggerire il carico sulle unità di
+controllo dedicate alla gestione delle dipendenze.
+
+Una prima politica per il cambio del flusso di esecuzione è detta \textbf{Hyper-threading}, la
+quale, ad ogni ciclo di clock alterna i vari flussi di esecuzione. In questo modo riusciamo ad
+allontanare le istruzioni che hanno delle dipendenze tenendo occupato il processore nell'esecuzione
+di istruzioni appartenenti ad un altro flusso d'esecuzione.
+
+Con l'Hyper-threading abbiamo l'effetto di eliminare gli stalli da 1 clock e di dimezzare stalli da
+2 cicli clock.
+
+Sebbene l'Hyper-threading sia un buon modo per alleggerire il peso delle dipendenze, esiste un'altra
+politica che prevede l'esecuzione continua dello stesso flusso di esecuzione finché non ci si
+imbatte in una dipendenza che causerebbe uno stallo. In quel caso cambiamo flusso di esecuzione e
+proseguiamo allo stesso modo.
+
+\subsection{Multicore}
+Il modello multicore nasce dall'esigenza di eseguire più processi contemporaneamente. Abbiamo
+infatti più \textbf{core} che a loro volta posso implementare del multithreading e possono essere
+di tipo superscalare, pipeline e così via.
+
+Ognuno di questi core lavora indipendentemente dall'altro e, sebbene tutti i core accedano alla
+stessa memoria, lo spazio di indirizzamento accessibile dai singoli core è differente.
+
+L'effetto che si vuole ottenere con un processore multicore è quello di avere un processore per
+ogni processo. Ovviamente non è possibile se pensiamo a quanti processi lavorano contemporaneamente
+su un computer ma, tramite meccanismi che si occupano di distribuire i vari processi tra i core in
+modo più efficace possibile otteniamo una buona simulazione.
+
+\subsubsection{Multicore ARM}
+Dato che i processori ARM sono spesso utilizzati su dispositivi mobili si è adottato una politica
+chiamata \textbf{big.LITTLE}, che prevede un'eterogeneità tra i core della macchina per ottimizzare
+il consumo energetico delle batterie.
+
+Abbiamo infatti core più potenti per calcoli più pesanti e che però consumano più energia, che
+vengono spenti quando non sono necessari. Abbiamo poi core meno potenti che invece sono sufficienti
+a gestire le funzionalità più semplici di dispositivi come ad esempio smartphone. Se necessario
+tutti i core possono lavorare simultaneamente per avere la massima potenza di calcolo.

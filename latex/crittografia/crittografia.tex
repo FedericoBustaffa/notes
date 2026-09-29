@@ -1,0 +1,37 @@
+\documentclass[12pt]{report}
+
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath, amssymb, amsthm, mathtools}
+\usepackage{enumitem}
+\usepackage{algorithmicx, algorithm, algpseudocode}
+
+% \usepackage{../packages/codestyle}
+
+\input{structure}
+
+\title{Crittografia}
+\author{Federico Bustaffa}
+\date{14/02/2022}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\include{intro} 			% INTRODUZIONE
+\include{rappresentazioni} 	% RAPPRESENTAZIONE OGGETTI
+\include{calcolabilita} 	% CALCOLABILITA'
+\include{complessita} 		% COMPLESSITA'
+\include{random} 			% SEQUENZE CASUALI
+\include{primi} 			% NUMERI PRIMI
+\include{storici} 			% CIFRARI STORICI
+\include{perfetti} 			% CIFRARI PERFETTI
+\include{massa} 			% CIFRARI SIMMETRICI PER CRITTOGRAFIA DI MASSA
+\include{chiave_pubblica} 	% CIFRARI A CHIAVE PUBBLICA
+\include{curve_ellittiche} 	% CIFRARI SU CURVE ELLITTICHE
+\include{protocolli} 		% PROTOCOLLI DI SICUREZZA
+\include{bitcoin} 			% BITCOIN
+\include{quantum} 			% CRITTOGRAFIA QUANTISTICA
+
+\end{document}

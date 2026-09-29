@@ -1,0 +1,618 @@
+\chapter{Cifrari a chiave pubblica}
+Nei cifrari simmetrici si ha un grosso problema, ovvero lo \textbf{scambio della chiave} che come sappiamo, deve
+essere la stessa per entrambi gli utenti.
+
+Fino ad ora abbiamo sempre assunto che i due utenti fossero gi\`a in possesso della chiave e abbiamo solo parlato del
+metodo di cifratura e decifrazione ma come avviene lo scambio della chiave ?
+\begin{itemize}
+	\item Se avviene di persona allora tanto vale scambiarsi direttamente il messaggio.
+	\item Se avviene in chiaro non ha pi\`u senso cifrare il messaggio dato che chiunque potrebbe intercettare la
+	      chiave e decifrarlo senza sforzo.
+	\item Se inviassimo la chiave cifrata si innescherebbe lo stesso problema all'infinito: il destinatario avrebbe
+	      bisogno della chiave di cifratura per decifrare e dunque si dovrebbe inviare un'altra chiave e cos\`i via.
+\end{itemize}
+I \textbf{cifrari a chiave pubblica} risolvono il problema.
+
+\section{Soluzione ingenua}
+Se abbiamo un sistema con $N$ utenti, ogni utente pu\`o memorizzare $N-1$ chiavi diverse e condivise con ciascun altro
+utente.
+
+In questo modo abbiamo un numero quadratico di chiavi nel numero di utenti del sistema.
+
+Quando un utente $A$ vuole comunicare con l'utente $B$ manda un messaggio a $B$ cifrandolo con la chiave $k_B$.
+L'utente $B$ a questo punto decifra il messaggio con la sua chiave $k_B$ e invia un messaggio ad $A$, cifrandolo con
+la chiave $k_A$.
+
+\section{TTP}
+Una soluzione migliore \`e rappresentata dal \textbf{TTP} o \textbf{trusted 3rd party}, ossia una terza parte
+\emph{fidata}, a cui gli utenti si appoggiano per comunicare.
+
+Ogni utente deve ricordarsi una sola chiave mentre TTP gestisce la creazione e lo scambio delle chiavi condivise tra i
+due utenti.
+
+Siano $A$ e $B$ i due utenti che vogliono comunicare, il processo di scambio funziona in questo modo:
+\begin{enumerate}
+	\item $A$ e $B$ possiedono rispettivamente due chiavi $k_A$ e $k_B$.
+	\item $A$ comunica a TTP di voler comunicare con $B$.
+	\item TTP genera casualmente una chiave $k_{AB}$ che potranno usare i due utenti per quella comunicazione.
+	\item TTP genera due crittogrammi $c_A$ e $c_B$ in questo modo
+	      \[
+		      \begin{matrix}
+			      c_A & = & C(k_{AB}, k_A) \\
+			      c_B & = & C(k_{AB}, k_B)
+		      \end{matrix}
+	      \]
+	\item TTP invia $c_A$ e $c_B$ ad $A$.
+	\item $A$ decifra $c_A$ con $k_A$ e invia $c_B$ a $B$.
+	\item $B$ decifra $c_B$ con $k_B$.
+\end{enumerate}
+Alla fine di questo processo i due utenti sono in possesso di una chiave $k_{AB}$ che potranno usare per quella
+comunicazione in un cifrario simmetrico.
+
+\subsection{Svantaggi}
+Le problematiche di questo sistema sono due:
+\begin{itemize}
+	\item TTP deve essere sempre online.
+	\item TTP conosce tutte le chiavi.
+\end{itemize}
+\`E un approccio utilizzabile solo in un sistema ristretto come un'universit\`a o un'azienda.
+
+\section{Chiave pubblica}
+In questo tipo di cifratura si vuole implementare un meccanismo che permette a chiunque di inviare messaggi cifrati a
+un certo utente ma permettere solo a quell'utente di decifrarli.
+
+Le operazioni di cifratura e decifrazione sono pubbliche e utilizzano due chiavi diverse:
+\begin{itemize}
+	\item \textbf{Chiave pubblica}: \`e nota a tutti.
+	\item \textbf{Chiave private}: nota solo al destinatario.
+\end{itemize}
+Questa coppia di chiavi \`e generata dall'utente in veste di destinatario, il quale rende nota la sua chiave pubblica e
+mantiene segreta la sua chiave privata.
+
+Se volessimo inviare un messaggio all'utente $i$ si dovrebbe cifrare il messaggio con la sua chiave pubblica. L'utente
+$i$ decifra il crittogramma con la sua chiave privata.
+
+In questo sistema l'unica cosa non nota a tutti \`e la chiave privata del destinatario. Le funzioni di cifratura e
+decifrazione e la chiave pubblica sono note a qualsiasi utente.
+
+\subsection{Pro e contro}
+I cifrari a chiave pubblica hanno due principali vantaggi:
+\begin{itemize}
+	\item Se ci sono $n$ utenti nel sistema, il numero complessivo di chiavi pubbliche e private \`e $2n$ anzich\'e
+	      $\frac{n(n-1)}{2}$.
+	\item Non \`e richiesto alcuno scambio segreto di chiavi.
+\end{itemize}
+Possiedono tuttavia anche due principali svantaggi:
+\begin{itemize}
+	\item Sono molto pi\`u lenti dei cifrari simmetrici.
+	\item Sono esposti ad attacchi di tipo \emph{chosen plain text}.
+\end{itemize}
+
+\subsection{Attacchi chosen plain text}
+Un crittoanalista quando effettua un'attacco di questo tipo
+\begin{enumerate}
+	\item Si procura un po' di messaggi in chiaro.
+	\item Li cifra con la funzione pubblica $C$ e con la chiave pubblica $k_{\text{pub}}$ del destinatario.
+	\item Confronta infine i crittogrammi in suo possesso con i crittogrammi che passano sul canale.
+\end{enumerate}
+Un attacco di questo tipo \`e molto pericoloso nel caso in cui il crittoanalista sospetti che un certo messaggio debba
+transitare sul canale.
+
+Ecco perch\'e questi cifrari non sono usati per comunicare ma solo per scambiarsi la chiave di un cifrario simmetrico
+(AES per esempio).
+
+In questo modo risolviamo in un colpo solo tutti i problemi elencati in precedenza:
+\begin{itemize}
+	\item Il processo \`e "lento" solo per lo scambio della chiave (256 bit) ma la comunicazione viene fatta con un
+	      cifrario simmetrico molto veloce.
+	\item L'attacco di tipo \emph{chosen plain text} diventa inattuabile dato che la chiave \`e una sequenza di bit
+	      casuale e dunque impossibile da prevedere.
+\end{itemize}
+
+\subsection{Requisiti}
+Perch\'e la cifratura a chiave pubblica sia effettuata correttamente devono essere soddisfatti alcuni requisiti:
+\begin{itemize}
+	\item Il destinatario deve essere in grado di decifrare qualsiasi messaggio con la propria chiave privata anche se
+	      questo \`e stato cifrato con la chiave pubblica:
+	      \[ m = D(C(m, k_{\text{pub}}), k_{\text{priv}}) \]
+	\item Efficienza e sicurezza del sistema:
+	      \begin{itemize}
+		      \item La coppia di chiavi \`e \emph{facile} da generare e deve risultare praticamente impossibile che due
+		            utenti scelgano la stessa chiave.
+		      \item Dati $m$ e $k_{\text{pub}}$ \`e \emph{facile} per il mittente produrre il crittogramma.
+		      \item Dati $c$ e $k_{\text{priv}}$ \`e \emph{facile} per il destinatario produrre il messaggio.
+		      \item Pur conoscendo la chiave pubblica e le funzioni di cifratura e decifrazione, deve essere
+		            \emph{difficile} per il crittoanalista risalire al messaggio in chiaro.
+	      \end{itemize}
+\end{itemize}
+La soluzione risiede nel trovare una funzione di tipo \textbf{one-way trap-door}, ovvero, una funzione facile da
+calcolare e difficile da invertire a meno che non si conosca la chiave privata.
+
+\section{RSA}
+Questo cifrario usa l'algebra modulare e si basa sulla moltiplicazione di due numeri primi $p$ e $q$ poich\'e,
+calcolare
+\[ n = p \cdot q \]
+richiede tempo quadratico nella lunghezza della loro rappresentazione ma, ricostruire $p$ e $q$ a partire da $n$,
+richiede tempo esponenziale se $p$ e $q$ sono primi.
+
+Se si conosce tuttavia uno dei due fattori, risalire all'altro \`e facile (basta fare una divisione).
+
+\subsection{Generazione delle chiavi}
+Per la generazione delle due chiavi, il destinatario deve
+\begin{enumerate}
+	\item Scegliere due numeri primi $p$ e $q$ molto grandi, dove per "molto grandi" intendiamo tali che $p \cdot q$
+	      sia un numero di circa 2000 bit per una protezione fino al 2030 o di circa 3000 bit se vogliamo una
+	      protezione oltre il 2030.
+
+	      Per farlo dobbiamo generare numeri di circa 1500 bit ed effettuare il test di Miller-Rabin per la
+	      primalit\`a finch\'e non otteniamo due numeri primi.
+	\item Calcolare
+	      \[ n = p \cdot q \]
+	      e la relativa funzione di Eulero
+	      \[ \phi(n) = (p - 1)(q - 1) \]
+	\item Scegliere un intero $e$ tale che
+	      \[ e < \phi(n) \quad \wedge \quad (e, \phi(n)) = 1 \]
+	\item Calcolare con l'algoritmo di Euclide esteso
+	      \[ d = e^{-1} \mod{\phi(n)} \]
+	      ossia l'inverso di $e$ modulo $\phi(n)$.
+\end{enumerate}
+
+\subsection{Cifratura e decifrazione}
+Sia $m < n$ un messaggio scritto come una sequenza binaria e trattato come un intero. Il valore decimale di $m$ deve
+essere strettamente minore di $n$, se cos\`i non fosse dobbiamo dividere $m$ in blocchi di $b = \log n$ bit
+
+Questo requisito \`e dovuto al fatto che tutte le operazioni sono fatte modulo $n$ e quindi $m \geq n$ implicherebbe
+che
+\[ m \neq m \mod{n} \]
+Si avrebbe quindi una funzione non iniettiva che mappa messaggi diversi nello stesso crittogramma.
+
+Nella pratica si fissa il valore di $b$ in modo da dare un limite inferiore a $n$, costringendo cos\`i l'utente ad usare
+chiavi lunghe
+\[ m < 2^b < n \]
+Per la \textbf{cifratura} si utilizza la chiave pubblica ed \`e definita come segue
+\[ c = m^e \mod{n} \]
+Per la \textbf{decifrazione} si utilizza la chiave privata del destinatario ed \`e definita in questo modo
+\[ m = c^d \mod{n} \]
+Sia cifratura che decifrazione hanno costo polinomiale con l'algoritmo di \emph{esponenziazione veloce}.
+
+\begin{example}
+	Consideriamo due numeri primi $p = 5$ e $q = 11$, otteniamo quindi
+	\[ n = 55 \]
+	Calcoliamo la funzione di Eulero su $n$
+	\[ \phi(n) = (p - 1) (q - 1) = 40 \]
+	Scegliamo ora un numero minore di 40 e coprimo con esso, per esempio
+	\[ e = 7 \]
+	La coppia $\langle n, e \rangle$ sar\`a la nostra chiave pubblica. Calcoliamo ora la chiave privata $d$ con
+	l'algoritmo di Euclide esteso
+	\[ d = 7^{-1} \mod{40} = 23 \]
+	Adesso non ci rimane che cifrare o decifrare con le funzioni di cifratura e decifrazione descritte sopra
+	\begin{align*}
+		c = & m^7 \mod{55}    \\
+		m = & c^{23} \mod{55}
+	\end{align*}
+\end{example}
+
+\subsection{Correttezza}
+Dimostriamo che il cifrario \`e corretto.
+
+\begin{proof}
+	Per dimostrare la correttezza del cifrario dobbiamo dimostrare che
+	\[ m = D(C(m, k_\text{pub}), k_\text{priv}) \]
+	per farlo dobbiamo dimostrare che
+	\[ m = {\underbrace{(m^e \mod{n})}_c}^d \mod{n} \]
+	che possiamo riscrivere come
+	\[ m = m^{ed} \mod{n} \]
+	Si procede per casi:
+	\begin{enumerate}
+		\item Nel primo caso supponiamo $m$ e $n$ coprimi. Dato che $m$ e $n$ sono coprimi vale il teorema di Eulero:
+		      \[ m^{\phi(n)} \equiv 1 \mod{n} \]
+		      Partendo dalla definizione di inverso facciamo anche un'altra considerazione: dato che $e$ e $d$ sono
+		      l'uno l'inverso dell'altro modulo $\phi(n)$ vale
+		      \[ ed \equiv 1 \mod{\phi(n)} \]
+		      che equivale a dire che
+		      \[ ed = r \cdot \phi(n) + 1 \]
+		      con $r \in \mathbb{N}$. Possiamo quindi scrivere l'ipotesi come
+		      \[ m^{ed} \mod{n} = m^{r \phi(n) + 1} \mod{n} \]
+		      Per le propriet\`a delle potenze possiamo scrivere
+		      \[ m \cdot (m^{\phi(n)})^r \mod{n} \]
+		      Per il teorema di Eulero questo equivale a
+		      \[ m \cdot 1^r \mod{n} = m \mod{n} = m\]
+		      dato che $m < n$.
+		\item Nel secondo caso $(n, m) \neq 1$. Il massimo comun divisore tra $n$ ed $m$ deve essere o $p$ o $q$ e
+		      vale che
+		      \[ p \mid m \quad \text{oppure} \quad q \mid m \]
+		      ma non entrambi possono essere divisori di $m$ perch\'e altrimenti $m$ sarebbe maggiore o uguale a $n$.
+		      Supponiamo che $p \mid m$ quindi $q \nmid m$, questo ci dice che
+		      \[ m \equiv 0 \mod{p} \quad \Rightarrow \quad m^r \equiv 0 \mod{p} \]
+		      per ogni $r \in \mathbb{N}$. Vale quindi che
+		      \[ m^r - m \equiv 0 \mod{p} \]
+		      Se prendiamo $r = ed$, otteniamo
+		      \[ m^{ed} - m \equiv 0 \mod{p} \]
+
+		      Consideriamo ora $q$, che ricordiamo, non divide $m$ e consideriamo
+		      \[ m^{ed} \mod{q} \]
+		      Questa equazione pu\`o essere riscritta come
+		      \[ m^{k \phi(n) + 1} \mod{q} \]
+		      ma come sappiamo $\phi(n)$ si pu\`o riscrivere come $(p - 1)(q - 1)$
+		      \[ m \cdot m^{k (p - 1)(q - 1)} \mod{q} \]
+		      come prima, per le propriet\`a delle potenze, possiamo scrivere
+		      \[ m \cdot (m^{(q - 1)})^{k (p - 1)} \mod{q} \]
+		      Dato che $q$ \`e un numero primo possiamo riscrivere l'equazione in questo modo
+		      \[ m \cdot (m^{\phi(q)})^{k (p - 1)} \mod{q} \]
+		      Usiamo il teorema di Eulero:
+		      \begin{gather*}
+			      m \cdot 1^{k (p - 1)} \mod{q} = m \mod{q} \\
+			      \Downarrow \\
+			      m^{ed} \mod{q} = m \mod{q} \\
+			      \Downarrow \\
+			      m^{ed} - m \equiv 0 \mod{q}
+		      \end{gather*}
+
+		      Possiamo quindi affermare che $m^{ed} - m$ \`e divisibile sia per $p$ che per $q$, quindi vale che
+		      \begin{gather*}
+			      m^{ed} - m \equiv 0 \mod{n} \\
+			      \Downarrow \\
+			      m^{ed} \mod{n} = m \mod{n}
+		      \end{gather*}
+		      ma dato che $m < n$ otteniamo
+		      \[ m \mod{n} = m \]
+		      Questo dimostra la correttezza anche quando messaggio e modulo non sono coprimi.
+	\end{enumerate}
+\end{proof}
+
+\subsection{Sicurezza}
+La \textbf{sicurezza} del cifrario \`e molto legata alla difficolt\`a nel fattorizzare un numero arbitrario molto
+grande.
+
+Riuscire a fattorizzare in tempo polinomiale \`e condizione sufficente per riuscire a forzare l'RSA ma non ci sono
+dimostrazione del fatto che sia anche condizione necessaria.
+
+Dato che il crittogramma $c$ \`e ottenuto tramite
+\[ c = m^e \mod{n} \]
+si potrebbe pensare di calcolare una radice
+\[ m = \sqrt[e]{c} \mod{n} \]
+ma dato che stiamo lavorando nell'algebra modulare e $n$ \`e un numero composto, l'estrazione della radice \`e un
+problema \emph{difficile} almeno quanto la fattorizzazione.
+
+\`E dunque pi\`u conveniente fattorizzare e compiere un attacco all'intero sistema piuttosto che sul singolo
+crittogramma.
+
+Anche calcolare $\phi(n)$ direttamente da $n$ \`e un problema \emph{difficile} quanto la fattorizzazione.
+
+Provare a ricavare $d$ direttamente da $n$ ed $e$ \`e un problema che \emph{sembra} costoso quanto la
+fattorizzazione.
+
+Il problema della fattorizzazione rimane \emph{difficile} ma non pi\`u come un tempo. Ci sono ad oggi algoritmi
+pi\`u raffinati che richiedono un numero di operazioni \textbf{subesponenziale}. Parliamo dell'algoritmo GNFS, il
+quale, dato un intero $n$ rappresentato con
+\[ b = \lceil \log n \rceil + 1 \]
+bit, richiede un numero di operazioni dell'ordine di $O(2^{\sqrt{b \log b}})$ per fattorizzarlo.
+
+\subsubsection{Vincoli sui parametri}
+I due parametri $p$ e $q$ devono essere scelti in base ad alcune propriet\`a, senza le quali si riuscirebbe
+facilmente forzare il cifrario:
+\begin{itemize}
+	\item Devono essere numeri di almeno 1024 bit per resistere agli attacchi a forza bruta.
+	\item Sia $p-1$ che $q-1$ devono contenere un fattore primo molto grande (altrimenti $n$ si fattorizza
+	      velocemente).
+	\item Il massimo comun divisore tra $p-1$ e $q-1$ deve essere piccolo. Conviene scegliere $p$ e $q$ tali che
+	      \[ \left( \frac{p-1}{2}, \frac{q-1}{2} \right) \]
+	\item Non si deve riusare uno dei due primi per altre sessioni di comunicazione.
+	      \[
+		      \begin{matrix}
+			      n_1 = p \cdot q_1 \\
+			      n_2 = p \cdot q_2
+		      \end{matrix}
+		      \quad \Rightarrow \quad
+		      p = (n_1, n_2)
+	      \]
+	\item La differenza tra $p$ e $q$ deve essere grande. Se cos\`i non fosse $p^2$ e $q^2$ sarebbero circa $n$ e
+	      quindi $\sqrt{n}$ sar\`a vicino ai numeri primi.
+
+	      Si effettua quindi un attacco a forza bruta che cerca i fattori vicini a $\sqrt{n}$.
+\end{itemize}
+Anche la scelta di $e$ e $d$ deve rispettare alcune propriet\`a. \`E vero che valori di $e$ e $d$ bassi accelerano
+la cifraura e la decifrazione ma ci fa andare incontro ad altri problemi
+\begin{itemize}
+	\item Se $d$ \`e piccolo l'attacco a forza bruta diventa un'opzione valida.
+	\item Se $m$ ed $e$ sono cos\`i piccoli che
+	      \[ m^e < n \]
+	      allora risulta facile trovare la radice $e$-esima di $c$ poich\'e non interviene la riduzione in modulo.
+\end{itemize}
+Ecco perch\'e, per avere garanzie sulla sicurezza, \`e importante scegliere anche $e$ e $d$ opportunamente grandi.
+
+\subsection{Attacchi}
+Vediamo qualche attacco efficiente nel caso si faccia un uso scorretto dei parametri $e$ ed $n$.
+
+\subsubsection{Scelta di e}
+Il parametro $e$, non solo deve essere sufficientemente grande, ma deve anche possedere alcune propriet\`a
+\begin{itemize}
+	\item Deve essere tale che
+	      \[ e \neq \frac{\phi(n)}{2} + 1 \]
+	\item Scelto $k \in \mathbb{N}$ tale che $k \mid p-1$ e $k \mid q-1$ allora
+	      \[ e \neq \frac{\phi(n)}{k} + 1 \]
+\end{itemize}
+Se questi due vincoli non sono soddisfatti allora vale
+\[ m^e \mod{n} = m \]
+quando $m$ ed $n$ sono coprimi.
+
+Supponiamo ora che ci siano almeno $e$ utenti che hanno scelto lo stesso valore di $e$ e supponiamo che tutti questi
+utenti ricevano lo stesso messaggio $m$. Si va a creare una situazione di questo tipo
+\[
+	\begin{matrix}
+		U_1    & c_1 = m^e \mod{n_1} \\
+		U_2    & c_2 = m^e \mod{n_2} \\
+		\vdots & \vdots              \\
+		U_e    & c_e = m^e \mod{n_e}
+	\end{matrix}
+\]
+Supponiamo ora che, per ogni coppia $i, j$ con $1 \leq i < j \leq e$, valga
+\[ (n_i, n_j) = 1 \]
+Per le propriet\`a del cifrario, deve valere, per ogni $i$ con $1 \leq i \leq e$
+\[ m < n_i \]
+affinch\'e $m$ possa essere cifrato.
+
+In queste condizioni \`e possibile applicare il teorema cinese del resto, il quale ci consente di calcolare in
+tempo polinomiale un valore $m' < n$ tale che
+\[ m' \equiv m^e \mod{n} \]
+dove $n$ \`e il prodotto di tutti gli $n_i$
+\[ n = \prod_{i=1}^e n_i \]
+Una volta in possesso di $m'$ si possono fare i seguenti passaggi
+\begin{enumerate}
+	\item Per le propriet\`a di $m'$ descritte sopra vale che
+	      \[ m' \mod{n} = m^e \mod{n} \]
+	      e, dato che $m' < n$, vale che
+	      \[ m' \mod{n} = m' \]
+	\item Notiamo ora che
+	      \[ m^e = \underbrace{m \cdot m \cdot \text{\dots} \cdot m}_{e \text{ volte}} \]
+	      e che
+	      \[ n_1 \cdot n_2 \cdot \text{\dots} \cdot n_e = n \]
+	      Ma, dato che tutti gli utenti hanno ricevuto lo stesso messaggio e, come abbiamo gi\`a detto, vale
+	      \[ m < n_i \]
+	      per qualsiasi $1 \leq i \leq e$, allora sappiamo vale
+	      \[ m \cdot m \cdot \text{\dots} \cdot m < n_1 \cdot n_2 \cdot \text{\dots} \cdot n_e \]
+	      quindi
+	      \[ m^e < n \quad \Rightarrow \quad m^e \mod{n} = m^e \]
+	\item Si ottiene quindi l'eguaglianza
+	      \[ m' = m^e \]
+	\item Si calcola
+	      \[ m = \sqrt[e]{m'} \]
+\end{enumerate}
+Si risolve il problema facendo un po' di \emph{padding}.
+
+\subsubsection{Attacco del modulo comune}
+Supponiamo ora che due utenti utilizzino lo stesso valore di $n$. Il primo utente ha a disposizione la coppia
+$\langle e_1, n \rangle$ e il secondo utente la coppia $\langle e_2, n \rangle$.
+
+Se $e_1$ ed $e_2$ sono coprimi e i due utenti ricevono lo stesso messaggio $m$, vale
+\[
+	\begin{matrix}
+		c_1 = m^{e_1} \mod{n} \\
+		c_2 = m^{e_2} \mod{n}
+	\end{matrix}
+\]
+allora si procede in questo modo
+\begin{enumerate}
+	\item Dato che $e_1$ ed $e_2$ sono coprimi devono esistere $r$ ed $s$ tali che
+	      \[ r e_1 + s e_2 = 1 \]
+	      e si trovano in tempo polinomiale con l'algoritmo di Euclide esteso. Supponiamo $r < 0$ e $s > 0$.
+	\item Dato che $m = m^1$ e 1 pu\`o essere scritto in funzione dei parametri trovati al passo precedente in
+	      questo modo
+	      \[ m = m^{r e_1 + s e_2} \]
+	      e dato che $m < n$ possiamo scrivere
+	      \[ m^{r e_1 + s e_2} \mod{n} \]
+	\item Per le propriet\`a delle potenze vale la seguente catena di uguaglianze
+	      \[
+		      \begin{array}{rcl}
+			      m^{r e_1 + s e_2} \mod{n} & = & (m^{r e_1} \mod{n}) (m^{s e_2} \mod{n}) \mod{n} \\
+			                                & = & (m^{e_1} \mod{n})^r (m^{e_2} \mod{n})^s \mod{n} \\
+			                                & = & c_1^r \cdot c_2^s \mod{n}
+		      \end{array}
+	      \]
+	\item Dato che $s > 0$ allora $c_2$ si calcola con l'algoritmo di esponenziazione veloce in tempo polinomiale.
+	\item Dato che invece $r < 0$ si deve fare qualche passaggio in pi\`u
+	      \begin{itemize}
+		      \item Si scrive $c_1^r \mod{n}$ come
+		            \[ (c_1^{-1})^{-r} \mod{n} \]
+		      \item Adesso abbiamo $-r > 0$.
+		      \item Nel caso in cui $c_1$ sia coprimo con $n$ si calcola il suo inverso moltiplicativo con
+		            l'algoritmo di Euclide e si eleva alla $-r$ con l'algoritmo di esponenziazione veloce.
+		      \item Nel caso in cui $c_1$ non sia coprimo con $n$ allora siamo riusciti a fattorizzare $n$ dato
+		            che quest'ultimo \`e un prodotto di due primi.
+	      \end{itemize}
+\end{enumerate}
+
+\subsubsection{Attacchi a tempo}
+Sono attacchi che cercano di stimare $d$ andando a vedere il tempo di decifrazione che impiega l'algoritmo.
+
+Si basa sul fatto che quando si esegue l'esponenziazione modulare si esegue una moltiplicazione ad ogni iterazione
+e un'ulteriore moltiplicazione modulare per ciascun bit uguale a 1 in $d$.
+
+Basta inserire ritardi casuali per proteggersi da questo tipo di attacchi.
+
+\subsubsection{Man in the middle}
+Questo attacco, di tipo \textbf{attivo}, consiste nella corruzione della chiave pubblica.
+\begin{enumerate}
+	\item Il crittoanalista intercetta la comunicazione e sostituisce la chiave pubblica del destinatario con la
+	      sua.
+	\item Il mittente riceve quindi la chiave pubblica del crittoanalista pensando di avere in mano quella del
+	      destinatario.
+	\item Il mittente invia la chiave simmetrica sul canale cifrandola con la chiave pubblica del crittoanalista.
+	\item Il crittoanalista intercetta la chiave simmetrica cifrata con la propria chiave e la decifra.
+	\item Per non interrompere la comunicazione, il crittoanalista cifra la chiave simmetrica del mittente con la
+	      chiave del destinatario e la invia a quest'ultimo.
+\end{enumerate}
+Alla fine di questo procedimento i due utenti hanno correttamente instaurato un protocollo di comunicazione (magari
+con un leggero ritardo) ma anche il crittoanalista \`e in possesso della chiave simmetrica con la quale pu\`o
+decifrare facilemente ogni messaggio che passa sul canale.
+
+Il modo per proteggersi da questi attacchi \`e quello di prendere i valori dei vari parametri pubblici da un
+certificato digitale.
+
+\section{Protocollo DH}
+Il \textbf{protocollo DH}, dai due crittografi che lo hanno implementato (Diffie ed Hellman), si basa sul problema
+del calcolo del logaritmo discreto.
+
+Questo protocollo nasce per dare pari responsabilit\`a sia a mittente che a destinatario nella creazione della
+chiave.
+
+Nella pratica non c'\`e uno scambio di chiave ma uno scambio di informazioni necessarie alla costruzione locale
+di una chiave simmetrica.
+
+\subsection{Funzionamento}
+Affinch\'e il procedimento funzioni, i due utenti $A$ e $B$, che intendono comunicare, devono scegliere
+\begin{itemize}
+	\item Un numero primo $p$ molto grande.
+	\item Un generatore $g$ per $\mathbb{Z}_p^*$, dove $\mathbb{Z}_p^*$ \`e un gruppo ciclico.
+\end{itemize}
+Questi due dati sono pubblici.
+
+I due utenti, per instaurare una comunicazione su un canale insicuro, devono
+\begin{enumerate}
+	\item Scegliere rispettivamente due interi $a$ e $b$ casuali, tali che
+	      \[ 1 < a, b < p-1 \]
+	\item Calcolare rispettivamente
+	      \begin{gather*}
+		      c_A = g^a \mod{p} \\
+		      c_B = g^b \mod{p}
+	      \end{gather*}
+	      con l'algoritmo di esponenziazione veloce.
+	\item Inviare rispettivamente $c_A$ e $c_B$ sul canale.
+	\item Calcolare rispettivamente
+	      \begin{gather*}
+		      k = c_B^a \mod{p} = g^{ba} \mod{p} \\
+		      k = c_A^b \mod{p} = g^{ab} \mod{p}
+	      \end{gather*}
+\end{enumerate}
+Alla fine di questo procedimento, gli utenti sono in possesso di una chiave simmetrica $k$ per la comunicazione.
+
+\subsection{Attacchi}
+Il crittoanalista conosce $p$, $g$, $c_A$ e $c_B$ ma non possiede ne $a$ ne $b$, fondamentali per il calcolo di $k$
+in tempo polinomiale. Senza queste informazioni deve calcolare il logaritmo discreto che, come sappiamo, ha costo
+subesponenziale. Il protocollo \`e dunque robusto ad attacchi passivi.
+
+\subsubsection{Man in the middle}
+Simuliamo il processo di costruzione della chiave visto in precedenza ma stavolta, il crittoanalista $C$ interviene
+nella comunicazione.
+\begin{enumerate}
+	\item $A$, $B$ e $C$ scelgono rispettivamente tre interi $a$, $b$ e $c$ casuali, tali che
+	      \[ 1 < a, b, c < p-1 \]
+	\item $A$, $B$ e $C$ calcolano rispettivamente
+	      \begin{gather*}
+		      c_A = g^a \mod{p} \\
+		      c_B = g^b \mod{p} \\
+		      c_C = g^c \mod{p}
+	      \end{gather*}
+	      con l'algoritmo di esponenziazione veloce.
+	\item $A$ e $B$ inviano rispettivamente $c_A$ e $c_B$ sul canale.
+	\item $C$ intercetta $c_A$ e $c_B$ e li sostituisce con $c_C$.
+	\item $A$ e $B$ calcolano rispettivamente
+	      \begin{gather*}
+		      k_A = c_C^a \mod{p} = g^{ac} \mod{p} \\
+		      k_B = c_C^b \mod{p} = g^{bc} \mod{p}
+	      \end{gather*}
+	\item $C$ calcola
+	      \begin{gather*}
+		      k_A = c_A^c \mod{p} = g^{ac} \mod{p} \\
+		      k_B = c_B^c \mod{p} = g^{bc} \mod{p}
+	      \end{gather*}
+\end{enumerate}
+A questo punto $A$ e $B$ hanno prodotto due chiavi differenti delle quali $C$ \`e in possesso. Se uno dei due utenti
+invia un crittogramma all'altro e $C$ non interviene in alcun modo, i due si accorgono immediatamente che c'\`e
+stata una corruzione e ripartono da zero.
+
+Il crittoanalista $C$ potrebbe per\`o continuare ad intercettare i crittogrammi sul canale e agire in questo modo
+\begin{enumerate}
+	\item $A$ invia un messaggio, cifrato con $k_A$.
+	\item $C$ lo intercetta e lo decifra con $k_A$.
+	\item $C$ cifra nuovamente il messaggio con $k_B$ e lo invia a $B$.
+\end{enumerate}
+Ovviamente vale lo stesso se \`e $B$ ad inviare un messaggio.
+
+Il risultato \`e che i due utenti non sperimentano alcuna corruzione dei dati poich\'e sono in grado di decifrare
+i crittogrammi che arrivano.
+
+Anche in questo caso il modo per proteggersi da questi attacchi \`e quello di prendere i valori dei vari parametri
+pubblici da un certificato digitale.
+
+\section{Cifrario di ElGamal}
+Anche \textbf{cifrario di ElGamal}, come il protocollo DH, basa la sua sicurezza sulla difficolt\`a nel calcolare il
+logaritmo discreto. Al livello di sicurezza non offre niente in pi\`u del protcollo DH o dell'RSA dato che la
+risoluzione di questo problema necessita lo stesso numero di operazioni della fattorizzazione.
+
+\subsection{Generazione delle chiavi}
+Per creare la coppia di chiavi si segue il seguente procedimento
+\begin{enumerate}
+	\item Si sceglie un numero primo $p$.
+	\item Si sceglie un generatore $g$ 	di $\mathbb{Z}_p^*$.
+	\item Si sceglie un intero casuale $x$ tale che
+	      \[ 2 \leq x \leq p-2 \]
+	\item Si calcola
+	      \[ y = g^x \mod{p} \]
+\end{enumerate}
+Abbiamo cos\`i ottenuto la chiave pubblica
+\[ k_\text{pub} = \langle p, g, y \rangle \]
+e la chiave privata
+\[ k_\text{priv} = x \]
+
+\subsection{Cifratura}
+Prima di vedere come si effettua la cifratura ci sono dei requisti che il messaggio $m$ deve avere:
+\begin{itemize}
+	\item Deve essere codificato come una sequenza binaria, trattata come un intero.
+	\item Deve essere scelto tale che
+	      \[ m < p \]
+	      se cos\`i non fosse si fa una cifratura a blocchi di $\log p$ bit.
+\end{itemize}
+Passiamo ora al metodo di cifratura.
+\begin{itemize}
+	\item Si sceglie un valore casuale $r$ tale che
+	      \[ 2 \leq r \leq p - 2 \]
+	\item Si calcola la coppia di crittogrammi
+	      \begin{gather*}
+		      c = g^r \mod{p} \\
+		      d = y^r \mod{p}
+	      \end{gather*}
+	      dove $y$ \`e la chiave pubblica del destinatario.
+\end{itemize}
+Per la decifrazione si calcola
+\[ m = d \cdot c^x \mod{p} \]
+Sviluppiamo i calcoli
+\[
+	\begin{matrix}
+		d \cdot c^{-x} \mod{p} & = & m \cdot y^r \cdot c^{-x} \mod{p}         \\
+		                       & = & m \cdot y^r \cdot (g^r)^{-x} \mod{p}     \\
+		                       & = & m \cdot (g^x)^r \cdot (g^r)^{-x} \mod{p} \\
+		                       & = & m \mod{p}
+	\end{matrix}
+\]
+e, come sappiamo, dato che $m < p$, l'ultima equazione equivale a $m$.
+
+\subsection{Attacchi}
+Per quanto riguarda attacchi di tipo \emph{man in the middle} valgono le considerazione fatte per RSA e protocollo
+DH, basta dunque estrarre i valori da alcuni certificati digitali per ovviare al problema.
+
+Per quanto riguarda attacchi di tipo passivo, il crittoanalista potrebbe provare a trovare $r$, con il quale
+riuscirebbe a decifrare il crittogramma.
+
+\`E quindi molto importante che $r$ sia tenuto segreto e che non venga mai riutilizzato per sessioni diverse.
+
+\subsubsection{Attacco su r}
+Supponiamo che il mittente invii due messaggi $m_1$ ed $m_2$ al destinatario utilizzando lo stesso $r$ per la
+cifratura. I crittogrammi generati sono
+\[
+	\begin{matrix}
+		\langle c = g^r \mod{p}, \quad d_1 = y^r \mod{p} \rangle \\
+		\langle c = g^r \mod{p}, \quad d_2 = y^r \mod{p} \rangle
+	\end{matrix}
+\]
+Supponiamo ora che il crittoanalista venga a conoscenza di $m_1$. Dato che
+\[
+	\begin{matrix}
+		d_1 = m_1 \cdot y^r \mod{p} \\
+		d_2 = m_2 \cdot y^r \mod{p}
+	\end{matrix}
+\]
+allora possiamo dire che
+\[ d_1 m_1^{-1} = y^r \mod{p} \]
+abbiamo quindi ottenuto $y^r$ e possiamo calcolare
+\[ m_2 = d_2 \cdot (-y^r)^{-1} \mod{p} \]

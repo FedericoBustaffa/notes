@@ -1,0 +1,236 @@
+\chapter{Alberi di decisione}
+Con gli \textbf{alberi di decisione} andiamo a trattare problemi di classificazione ma con modelli pi\`u flessibili
+che ci permettono di fare approssimazioni in una spazio delle ipotesi discreto.
+
+Con questo approccio abbandoniamo anche le regole congiuntive, che, come avevamo visto, rendono il modello abbastanza
+rigido.
+
+Gli alberi di decisione rappresentano una disgiunzione di congiunzioni di vincoli sui valori degli attributi. In
+pratica un albero ha vari \textbf{cammini} o \textbf{path}, i cui nodi sono composti da un attributo, al
+quale viene assegnato un certo valore. Ogni cammino termina con un valore \verb|true| o \verb|false|.
+
+L'albero \`e una disgiunzione di tutte le congiunzioni (o cammini) che portano a un valore \verb|true|.
+
+\section{Algoritmo ID3}
+\`E un algoritmo di tipo \emph{greedy} che fa una ricerca nello spazio delle ipotesi usando l'euristica del
+\textbf{maggior guadagno di informazione} o \textbf{information gain} e procede in questo modo:
+\begin{enumerate}
+	\item Scegliamo l'attributo con il maggior information gain.
+	\item Valutiamo tutti i possibili valori dell'attributo generando, per ognuno di essi, un nodo successore.
+	\item Ripetiamo il procedimento per ogni nodo successore generato finch\'e tutti gli esempi sono classficati
+	      correttamente oppure finch\'e non ci sono pi\`u attributi rimasti.
+\end{enumerate}
+In questo modo abbiamo generato un albero di decisione, il quale conterr\`a vari cammini, ognuno dei quali terminer\`a
+con un valore \verb|true| o \verb|false|.
+
+I cammini potrebbero non essere tutti della stessa lunghezza. Mettiamo caso che per un certo valore di un certo
+attributo, qualsiasi siano i valori degli altri attributi l'esempio \`e sempre positivo. In questo caso l'algoritmo
+classificher\`a ogni esempio contenente quell'attributo con quel certo valore come positivo senza creare ulteriori
+successori.
+
+\subsection{Entropia}
+La scelta del miglior attributo viene fatta in base al valore di \textbf{entropia}. L'entropia, in questo caso, indica
+l'\emph{impurit\`a} di un insieme di esempi.
+
+Essa dipende dalla distribuzione di una variabile $p$. In particolare, se $S$ \`e il nostro insieme di esempi,
+$p_+$ indica la proporzione di esempi positivi in $S$ mentre $p_-$ indica la proporzione di esempi negativi in $S$.
+
+Il valore di entropia, relativa ad un certo insieme di esempi $S$, \`e dato dalla seguente formula:
+\[ Entropy(S) = -p_+ \log_2{(p_+)} - p_- \log_2{(p_-)} \]
+Ci\`o che vogliamo fare adesso, \`e assegnare un valore ad un attributo e misurare il valore di entropia di $S$
+togliendo da $S$ tutti gli esempi in cui a quel determinato attributo \`e assegnato quel determinato valore. Andremo
+quindi a calcolare
+\[ Entropy(S_{A(v)}) \]
+dove $S_{A(v)}$ indica l'insieme di tutti gli esempi in cui l'attributo $A$ assume come valore $v$.
+
+L'information gain di un certo attributo $A$ non \`e altro che la differenza tra il valore di entropia di $S$ e la
+somma dei valori di entropia di $S_{A(v)}$ per ogni possibile $v$ relativo ad $A$.
+
+In realt\`a la somma \`e pesata sul rapporto tra la cardinalit\`a dell'insieme $S_{A(v)}$ e quella di $S$, infatti
+la formula per ottenere l'information gain relativo all'attributo $A$ \`e definita in questo modo:
+\[ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{A(v)}|}{|S|} Entropy(S_{A(v)}) \]
+Un sottoinsieme $S_{A(v)}$ ben partizionato, avr\`a una bassa entropia, render\`a quindi pi\`u alto l'information gain.
+Il nostro obbiettivo \`e trovare l'attributo che massimizza l'information gain.
+
+Andremo quindi a preferire attributi che generano sottoinsiemi a bassa entropia, poich\'e massimizzano l'information
+gain e riescono a partizionare meglio l'insieme di esempi.
+
+\subsection{Gain Ratio}
+L'information gain cos\`i definito ha per\`o un problema, ossia, quello di favorire attributi che hanno molti possibili
+valori e che compaiono in pochi esempi.
+
+In questo modo si ottengono sottoinsiemi perfettamente partizionati (o quasi) ma che non ci forniscono
+un'informazione interessante nel complesso.
+
+Introduciamo quindi un metodo per evitare la formazione di sottoinsiemi \emph{piccoli}, ossia, il \textbf{gain ratio}. Il
+gain ratio si ottiene tramite il calcolo di un altro valore: lo \textbf{split information} definito come segue:
+\[ SplitInformation(S, A) = -\sum_{i=1}^c \frac{|S_i|}{|S|} \log_2 \left(\frac{|S_i|}{|S|}\right) \]
+dove $S_i$ indica il l'insieme ottenuto partizionando sul valore $i$ di $A$ e dove $c$ \`e il numero di possibili valori
+che pu\`o assumere $A$.
+
+Lo split information indica il valore di entropia di $S$ rispetto ai valori di $A$ e pi\`u \emph{uniformemente} i dati
+sono \emph{frammentati}, pi\`u alto \`e il suo valore.
+
+Ora possiamo definire il gain ratio in questo modo:
+\[ GainRatio(S, A) = \frac{Gain(S, A)}{SplitInformation(S, A)} \]
+ottenendo cos\`i uno strumento che penalizza gli attributi che ottengono un alto gain tramite la frammentazione di tanti
+insieme piccoli.
+
+\subsection*{Ulteriori aggiustamenti}
+Anche con questo metodo si possono avere dei problemi. Infatti nel caso in cui ci sia un attributo con valore costante
+per tutti gli esempi, lo split information andrebbe a 0 (o comunque tenderebbe a 0), facendo cos\`i salire troppo il
+gain ratio.
+
+Se il gain ratio sale troppo finiremo per privilegiare un attributo che in realt\`a non ci sta dicendo nulla poich\'e
+\`e uguale per tutti gli esempi.
+
+Per mitigare questo problema si procede in questo modo:
+\begin{enumerate}
+	\item Si calcola il gain per tutti gli attributi.
+	\item Per gli attributi il cui gain supera un certo valore medio, si calcola il relativo gain ratio.
+\end{enumerate}
+
+\subsection{Analisi ID3}
+L'algoritmo ID3 fa un Hill-Climbing in uno spazio delle ipotesi \emph{discreto}, dall'ipotesi pi\`u semplice a quella
+pi\`u complessa. Inoltre, rispetto a Candidate Elimination, abbiamo che
+\begin{itemize}
+	\item Lo spazio delle ipotesi \`e \textbf{completo}.
+	\item La ricerca \textbf{mantiene} una sola ipotesi consistente.
+	\item Non c'\`e backtracking, dunque \textbf{non \`e ottimo}.
+	\item Usa \textbf{tutti} gli esempi disponibili.
+	\item Pu\`o avere \textbf{terminazione anticipata}.
+\end{itemize}
+
+\subsubsection{Bias induttivi per ID3}
+Per gli alberi di decisione abbiamo due bias induttivi:
+\begin{enumerate}
+	\item Si preferiscono alberi \textbf{corti}.
+	\item Si preferiscono alberi che mettono attributi con maggior information gain \textbf{vicino alla radice}.
+\end{enumerate}
+In questo caso abbiamo un limite sulla strategia di ricerca, ossia un \textbf{bias di ricerca}. Se invece avessimo avuto
+restrizioni sullo spazio delle ipotesi avremmo avuto un \textbf{bias di linguaggio}.
+
+In generale, l'uno non esclude l'altro, anzi, una combinazione di questi due bias fornisce modelli \textbf{flessibili},
+che poi sono quelli che pi\`u si prestano a fare un buon fitting dei dati.
+
+\section{Overfitting in alberi di decisione}
+Analogamente al caso dei modelli lineari, costruire un albero di decisione che si adatta troppo agli esempi di training
+pu\`o portare al problema dell'\textbf{overfitting}.
+
+Quando trattiamo l'overfitting dobbiamo considerare due tipi di errore:
+\begin{itemize}
+	\item L'\textbf{errore empirico}, ossia, l'errore sul training set.
+	      \[ error_D(h) \]
+	\item L'\textbf{errore vero}, ossia, l'errore sull'intera distribuzione dei dati. Intendiamo quindi sia l'errore sui
+	      dati di training che quello sui dati non ancora analizzati.
+	      \[ error_X(h) \]
+\end{itemize}
+
+\begin{definition}
+	Un'ipotesi $h$ fa \textbf{overfitting} sui dati di training se esiste un'ipotesi $h'$ tale che
+	\begin{itemize}
+		\item $error_D(h) < error_D(h')$
+		\item $error_X(h') < error_X(h)$
+	\end{itemize}
+	ovvero se $h'$ si comporta meglio sui dati non ancora analizzati e peggio sul training set.
+\end{definition}
+
+\subsection{Validation Set}
+Per mitigare il problema di overfitting negli alberi di decisione si possono adottare due strategie:
+\begin{itemize}
+	\item Si termina prima di raggiungere la perfezione sui dati di training.
+	\item Si ammette overfitting sul training set e poi si fa un'operazione di \textbf{pruning} sull'albero.
+\end{itemize}
+In particolare si fa ricorso ad un nuovo strumento che andremo ad approfondire pi\`u avanti, ossia, il
+\textbf{validation set}.
+
+Quello che andiamo a fare \`e dividere in due parti il training set. Una parte avr\`a ancora la funzione di training,
+l'altra diventer\`a il nostro validation set che ci andr\`a a guidare nella fase di pruning oppure ci forninar\`a
+informazioni utili su quando fermarci (a seconda della strategia scelta).
+
+\subsection{Pruning}
+Andiamo ora a vedere come procedere nell'operazione di \textbf{pruning}.
+\begin{enumerate}
+	\item Ogni nodo \`e candidato per una possibile potatura.
+	\item Fare pruning consiste nel rimuovere un sottoalbero radicato in un certo nodo. Il nodo a quel punto diventa una
+	      foglia e gli viene assegnata la classe pi\`u comune tra gli esempi che gli erano stati assegnati.
+	\item Un nodo \`e rimosso solo se non peggiora sul validation set.
+	\item I nodi sono potati iterativamente: si cerca un nodo la cui rimozione porta ad un miglioramento sul validation
+	      set
+	\item Il pruning termina quando non c'\`e pi\`u alcun nodo la cui rimozione porta ad un miglioramento sul validation
+	      set
+\end{enumerate}
+
+\subsection{Regole post pruning}
+Si pu\`o anche agire a livello di regole e non su interi sottoalberi, adottando \textbf{regole post pruning}. Per farlo
+seguiamo questo procedimento:
+\begin{enumerate}
+	\item Si crea l'albero di decisione.
+	\item Si converte l'albero in un insieme di regole equivalente:
+	      \begin{itemize}
+		      \item Ogni cammino corrisponde ad una regola.
+		      \item Ogni nodo lungo un cammino corrisponde ad una pre-condizione.
+		      \item Ogni foglia corrisponde ad una post-condizione.
+	      \end{itemize}
+	\item Si effettua l'operazione di pruning rimuovendo quelle pre-condizioni la cui rimozione migliora l'accuratezza
+	      \begin{itemize}
+		      \item sul validation set.
+		      \item sul training set con una misura pessimistica.
+	      \end{itemize}
+	\item Si ordinano le regole in ordine di accuratezza stimata e si considerano in sequenza quando dobbiamo
+	      classificare nuove istanze.
+\end{enumerate}
+Questo approccio porta vari vantaggi:
+\begin{itemize}
+	\item Ogni cammino produce una regola distinta e la rimozione di una condizione pu\`o essere fatta in maniera
+	      locale rispetto a quella regola.
+	\item Il pruning delle precondizioni \`e specifico per quel determinato cammino, mentre il pruning di un nodo
+	      \`e globale e ha effetto su tutte le regole.
+	\item La conversione in regole migliora la leggibilit\`a.
+\end{itemize}
+
+\subsection{Valori continui}
+Con gli alberi di decisione siamo anche in grado di gestire attributi a valori continui. Per farlo abbiamo bisogno di
+un certo valore soglia. A questo punto ci baster\`a assegnare \verb|true| ai valori sotto la soglia e \verb|false| ai
+valori sopra la soglia (o viceversa).
+
+Per trovare la soglia possiamo fare una media di tutti i valori che ho a disposizione nel training set e decidere in
+base al valore dell'information gain.
+
+\subsection{Valori mancanti}
+Nel caso in cui manchi una parte dell'informazione si adotta una strategia detta \textbf{imputation} per \emph{forzare}
+il valore mancante:
+\begin{enumerate}
+	\item Un metodo consiste semplicemente nel metterci il \textbf{pi\`u frequente} nel training set.
+	\item Un altro modo consiste nell'assegnare una \textbf{probabilit\`a} a ciascun valore, basata sulla frequenza con
+	      cui compare, assegnando poi il valore mancante in accordo con questo valore di probabilit\`a.
+\end{enumerate}
+Questi metodi forniscono un modo per classificare dati mancanti in base alla classificazione pi\`u probabile rispetto
+agli altri dati.
+
+\subsection{Classificazione con costo}
+A volte non possiamo basarci solo sull'information gain, a volte \`e necessario tenere di conto che l'attributo che
+porta pi\`u information gain potrebbe avere un costo troppo elevato (costo che dipende dal contesto: tempo, denaro
+ecc.).
+
+Introduciamo quindi due metodi per dare un peso il giusto peso all'information gain in base al costo:
+\begin{itemize}
+	\item \textbf{Tan e Schlimmer}
+	      \[ \frac{Gain^2(S, A)}{Cost(S, A)} \]
+	\item \textbf{Nunez}
+	      \[ \frac{2^{Gain(S, A)} - 1}{(Cost(S, A) + 1)^w} \quad \text{con } w \in [0, 1] \]
+\end{itemize}
+
+\section{Conclusioni}
+Gli alberi di decisione sono un approccio vantaggioso per problemi di classificazione con un numero di classi finito
+a valori discreti:
+\begin{itemize}
+	\item Ha uno spazio delle ipotesi espressivo in ambito proposizionale ed ha un approccio basato su regole.
+	\item \`E robusto a dati rumorosi poich\'e riesce a gestire anche dati incompleti.
+	\item \`E di facile comprensione.
+	\item Ha molte estensioni.
+\end{itemize}
+L'algoritmo ID3 compie una ricerca greedy incompleta in uno spazio delle ipotesi completo.
+
+Riesce a mitigare bene il problema dell'overfitting grazie alle regole post pruning e alla generalizzazione di regole
+induttive.

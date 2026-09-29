@@ -1,0 +1,190 @@
+#import "@local/note_template:0.1.0": *
+#show: doc => note_template([Matrices], doc)
+
+#title()
+
+One of the main objects in linear algebra is the *matrix*, that can be seen as
+an element of $bb(R)^(m times n)$, that can have many meanings as collection of
+column or row vectors, the representation of a system of linear equations or a
+linear mapping.
+
+Before using matrices for some specific task is useful to define some
+properties, always valid regardless of context.
+
+- *Sum*: given $A , B in bb(R)^(m times n)$
+  $ A + B = C in bb(R)^(m times n) $
+  that is the element-wise sum of $A$ and $B$ ($c_(i j) = a_(i j) + b_(i j)$).
+- *Product*: given $A in bb(R)^(m times n)$ and $B in bb(R)^(n times p)$
+  $ A dot.op B = C in bb(R)^(m times p) $
+  is the so called *dot product* between $A$ and $B$. This works also for
+  $1$-column (and $1$-row) matrices, defining the _matrix by vector_
+  multiplication.
+
+#note(title: "Matrix-Matrix Multiplication")[
+  Given two matrices $A in bb(R)^(m times n)$ and $B in bb(R)^(n times p)$, the
+  elements of product matrix $C in bb(R)^(m times p)$ are computed as follows:
+
+  $ c_(i j) = sum_(k = 1)^n a_(i k) dot.op b_(k j) $
+
+  with $i = 1 , dots.h , m$ and $j = 1 , dots.h , p$.
+]
+
+For the dot product the following properties are valid:
+
+- *Associativity*: $(A B) C = A (B C)$
+- *Distributivity*: $(A + B) C = A C + B C$ and $A (B + C) = A B + A C$
+
+#important(title: "Dot Product Commutativity")[
+  The _dot product_ is, in general, not commutative
+  $ A B eq.not B A $
+]
+
+Matrices also represent *linear transformations*, for example $A v$ is a
+transformation $A$ applied to the vector $v$ (like translation or rotation).
+
+#pagebreak()
+#note(title: "Order of Transformations")[
+  Knowing that the order in matrix multiplication counts, if we apply multiple
+  transformations to a vector, the order in which we apply them will change the
+  outcome.
+
+  If for example we apply a rotation before a traslation, first we change the
+  coordinates system by rotating and then the vector will be moved along the new
+  axis.
+
+  On the other hand, if we translate first, the vector will be moved and then
+  rotated accordingly to the same center of rotation as before.
+]
+
+To combine multiple transformation is possible to multiply matrices. In order to
+do that we need the product between the two to be well defined. Given $A in
+bb(R)^(m times n)$, the other matrix needs to be $B in bb(R)^(n times p)$ for
+the product to be well defined. In the end we have
+
+$ A B in bb(R)^(m times p) $
+
+The classical row by column product has a cost of $O (m n p)$ that in general we
+can approximate to $O (n^3)$ if we consider almost squared matrices with
+dimension $n times n$.
+
+An important matrix, that is useful to define other matrices and represents the
+neutral element for the dot product, is the *identity* matrix
+
+#note(title: "Identity Matrix")[
+  The *identity matrix* is defined as a square matrix with all zeros
+  except on the main diagonal, that has only ones.
+
+  $
+    I = mat(
+      delim: "[", 1, 0, dots.h.c, 0; 0, dots.down, dots.down, dots.v;
+      dots.v, dots.down, dots.down, 0; 0, dots.h.c, 0, 1
+    )
+  $
+]
+
+The identity matrix is crucial to define the *inverse* matrix of a matrix $A$,
+that is very important in many situations like solving linear systems.
+
+#note(title: "Inverse Matrix")[
+  Given a _square_ matrix $A$, its inverse is a matrix $B$ such that
+  $ A B = B A = I $
+  and it is denoted as $A^(- 1)$.
+]
+
+Unfortunately, not all (square) matrices have a inverse, if so, they are called
+*singular* or *non invertible*; if instead a matrix has a inverse is called
+*regular*, *non singular* or *invertible*.
+
+A direct consequence of this definition is that, if we have $A$ and $I$ is
+possible to find $A^(- 1)$ by computing the dot product
+
+$ A A^(- 1) = I $
+
+and solving a linear system. Now should be more clear that not always is
+possible to have a inverse.
+
+Another special matrix is the *transpose* that, unlike the inverse, is always
+defined for every matrix square and rectangular matrix (so also for vectors).
+
+#note(title: "Transpose Matrix")[
+  Given a matrix $A in bb(R)^(m times n)$, the matrix $B in bb(R)^(n times m)$
+  whose elements are
+  $ b_(i j) = a_(j i) $
+  is called the transpose of $A$ and is denoted as $A^T$.
+]
+
+Let’s see some properties of these two matrices
+
+- $A A^(- 1) = A^(- 1) A = I$
+- $(A^T)^T = A$
+- $(A B)^(- 1) = B^(- 1) A^(- 1)$ and similarly
+  $(A B)^T = B^T A^T$
+- $(A + B)^(- 1) eq.not A^(- 1) + B^(- 1)$ instead
+  $(A + B)^T = A^T + B^T$
+
+Let’s also say that if $A$ is invertible, also $A^T$ is invertible and this
+is true because
+
+$ (A^(- 1))^T = (A^T)^(- 1) = A^(- T) $
+
+#note(title: "Symmetric Matrix")[
+  Given a matrix $A$ such that
+  $ A = A^T $
+  then is called *symmetric*.
+]
+
+The sum of symmetric matrices is also symmetric, while the product is not
+(generally).
+
+There are also properties for matrix multiplication by a scalar, so given
+$lambda , psi in bb(R)$ it holds:
+
+- $(lambda psi) C = lambda (psi C)$
+- $lambda (B C) = (lambda B) C = B (lambda C) = (B C) lambda$
+- $(lambda C)^T = lambda C^T$
+- $(lambda + psi) C = lambda C + psi C$
+- $lambda (B + C) = lambda B + lambda C$
+
+These are general properties and useful matrices to start doing things with
+linear algebra.
+
+= Symmetric Positive (Semi)Definite Matrices <spsd>
+
+Some interesting matrices are the *symmetric positive definite (SPD)*, that are
+defined as symmetric matrices whose eigenvalue are all *strictly* positive
+
+$ A succ 0 $
+
+It's easy to imagine that *symmetric positive semidefinite (SPSD)*
+are symmetric matrices with all eigenvalues greater or equal than $0$
+
+$ A succ.eq 0 $
+
+Let’s also notice that
+
+- $A$ is SPD if and only if $x^T A x > 0$ for all $x eq.not 0$.
+- $A$ is SPSD if and only if $x^T A x gt.eq 0$ for all $x$.
+
+For rectangular matrices we have that, given $A in bb(R)^(m times n)$ the
+matrices $A^T A$ and $A A^T$ are SPSD. They’re both symmetric:
+
+$
+  A^T A & = (A^T A)^T = A^T A \
+  A A^T & = (A A^T)^T = A A^T
+$
+
+and their eigenvalues are greater or equal than $0$
+
+$
+  x^T A^T A x & = (A x)^T (A x) = norm(A x)^2 >= 0 \
+  x^T A A^T x & = (A^T x)^T (A^T x)
+                = norm(A^T x)^2 >= 0
+$
+
+so they are both SPSD. Another way to see this is by noticing that an SPD matrix
+must satisfy the following condition
+
+$ x^T A x > 0 $
+
+for every $x in RR^n backslash {0}$. If it also holds $A^T A = A A^T$ the matrix
+is called *normal*.

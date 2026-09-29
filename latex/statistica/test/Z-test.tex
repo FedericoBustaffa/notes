@@ -1,0 +1,267 @@
+\section{Z-test}\label{sec: z-test}
+Si vuole ora effettuare un test sulla media di una popolazione Gaussiana con varianza nota.
+Definiamo quindi $X \sim N(\mu, \sigma^2)$ con $\sigma^2$ nota e sia $X_1, \dots, X_n$ un campione
+i.i.d. di $X$. Come per l'intervallo di fiducia usiamo il fatto che
+\[ \sqrt{n} \cdot \frac{\bar{X}_n - \mu}{\sigma} = Z \sim N(0,1) \]
+per il \hyperref[th: tcl]{teorema centrale del limite}.
+
+\subsection{Test bilatero}
+Poniamoci nell'ipotesi
+\[ H_0: \mu = \mu_0 \qquad H_1: \mu \neq \mu_0 \]
+
+\subsection{Formulazione del test}
+Poiché $\bar{X}_n$ è la stima della media $\mu$, l'intuizione ci porta a rifiutare l'ipotesi $H_0$
+se $\bar{X}_n$ si discosta molto dal valore $\mu_0$. Scegliamo quindi una regione critica
+\[ C = \{ | \bar{X}_n - \mu_0 | > d \} \]
+con $d$ da determinare. Per scegliere $d$ imponiamo che
+\[ P_{\mu_0} (C) \leq \alpha \]
+con $\alpha$ livello del test e per avere massima potenza del test imponiamo
+\[ P_{\mu_0} (C) = \alpha \]
+Questo vuol dire che
+\begin{align*}
+	\alpha =     & P_{\mu_0} (|\bar{X}_n - \mu_0| > d )                              \\
+	             & \iff                                                              \\
+	\alpha =     & 1 - P_{\mu_0} (|\bar{X}_n - \mu_0| \leq d)                        \\
+	             & \iff                                                              \\
+	1 - \alpha = & P_{\mu_0} (|\bar{X}_n - \mu_0| \leq d)                            \\
+	=            & P_{\mu_0} \left( \frac{\sqrt{n}}{\sigma} \cdot
+	|\bar{X}_n - \mu_0| \leq \frac{\sqrt{n}}{\sigma} \cdot d \right)                 \\
+	=            & P_{\mu_0} \left( |Z| \leq \frac{\sqrt{n}}{\sigma} \cdot d \right)
+\end{align*}
+dove $Z$ è una Gaussiana standard. Continuando il calcolo abbiamo
+\begin{align*}
+	P_{\mu_0} \left( |Z| \leq \frac{\sqrt{n}}{\sigma} \cdot d \right)
+	= & P_{\mu_0} \left( -\frac{\sqrt{n}}{\sigma} \cdot d \leq Z
+	\leq \frac{\sqrt{n}}{\sigma} \cdot d \right)                        \\
+	= & \Phi \left( \frac{\sqrt{n}}{\sigma} \cdot d \right) -
+	\Phi \left( -\frac{\sqrt{n}}{\sigma} \cdot d \right)                \\
+	= & 2 \cdot \Phi \left( \frac{\sqrt{n}}{\sigma} \cdot d \right) - 1
+\end{align*}
+A questo punto abbiamo che
+\begin{gather*}
+	1 - \alpha = 2 \cdot \Phi \left( \frac{\sqrt{n}}{\sigma} \cdot d \right) - 1 \\
+	\iff \\
+	\Phi \left( \frac{\sqrt{n}}{\sigma} \cdot d \right) = 1 - \frac{\alpha}{2} \\
+	\iff \\
+	\frac{\sqrt{n}}{\sigma} \cdot d = q_{1 - \frac{\alpha}{2}} \\
+	\iff \\
+	d = \frac{\sigma}{\sqrt{n}} \cdot q_{1 - \frac{\alpha}{2}}
+\end{gather*}
+Otteniamo quindi la regione critica
+\[
+	C = \left\{ \sqrt{n} \cdot \frac{|\bar{X}_n -
+		\mu_0|}{\sigma} > q_{1 - \frac{\alpha}{2}} \right\}
+\]
+In pratica, di fronte alla realizzazione $(x_1, \dots, x_n)$ del campione si calcola la media
+empirica $\bar{x}$ e si rifiuta $H_0$ se e solo se
+\[ \sqrt{n} \cdot \frac{|\bar{X}_n - \mu_0|}{\sigma} > q_{1 - \frac{\alpha}{2}}  \]
+Notiamo che l'ampiezza della regione di accettazione $C^c$ che è
+\[ 2 \cdot \frac{\sigma}{\sqrt{n}} \cdot q_{1 - \frac{\alpha}{2}} \]
+\begin{itemize}
+	\item Cresce al decrescere di $\alpha$
+	\item Cresce al crescere di $\sigma^2$
+	\item Decresce al crescere di $n$
+\end{itemize}
+
+\begin{observation}
+	L'ipotesi $H_0: \mu = \mu_0$ è accettata al livello $\alpha$ se e solo se $\mu_0$ appartiene
+	all'intervallo di fiducia di livello $1-\alpha$.
+\end{observation}
+
+Questa è una proprietà generale: si può dimostrare che è equivalente verificare un intervallo di
+fiducia di livello $1-\alpha$ e formulare un test di livello $\alpha$ con $H_0$
+\textbf{ipotesi semplice}, cioè ridotta ad un unico valore del parametro
+($H_0 : \theta = \theta_0$).
+
+\subsection{Calcolo del p-value}
+Informalmente, il $p$-value dei dati $(x_1, \dots, x_n)$ è la probabilità, sotto $H_0$, di
+ottenere dati più estremi, rispetto ad $H_0$, di $(x_1, \dots, x_n)$. Poiché $\bar{X}_n$ è
+lo stimatore di $\mu$ e $H_0: \mu = \mu_0$, è intuitivo considerare, come dati più estremi, i dati
+$(y_1, \dots, y_n)$ che verificano
+\[ |\bar{y} - \mu_0| > |\bar{x} - \mu_0| \]
+ci aspettiamo quindi che $\bar{y}$ sia più distante da $\mu_0$ rispetto a $\bar{x}$. Ci
+aspettiamo quindi come $p$-value
+\[
+	\bar{\alpha} (x_1, \dots, x_n) =
+	P_{\mu_0} (|\bar{X} - \mu_0| > |\bar{x} - \mu_0|)
+\]
+Per svolgere il calcolo usiamo la standardizzazione e otteniamo
+\begin{align*}
+	P_{\mu_0} (|\bar{X} - \mu_0| > |\bar{x} - \mu_0|)
+	= & P_{\mu_0} \left( \frac{\sqrt{n}}{\sigma} \cdot |\bar{X} - \mu_0| >
+	\frac{\sqrt{n}}{\sigma} \cdot |\bar{x} - \mu_0| \right)                    \\
+	= & P \left( |Z| > \frac{\sqrt{n}}{\sigma} \cdot |\bar{x} - \mu_0| \right) \\
+	= & 2 \cdot \left(1 - \Phi \left(\frac{\sqrt{n}}{\sigma} \cdot
+		|\bar{x} - \mu_0| \right) \right)
+\end{align*}
+Si verifica che $\bar{\alpha}$ soddisfa la definizione rigorosa di $p$-value: si rifiuta $H_0$
+se e solo se $\alpha > \bar{\alpha}$.
+
+\subsection{Calcolo della curva operativa}
+Come abbiamo detto, la curva operativa è
+\begin{align*}
+	\beta (\mu) = & P_\mu (C^c)                                                         \\
+	=             & P_\mu \left( \sqrt{n} \cdot \frac{|\bar{X} - \mu_0|}{\sigma}
+	\leq q_{1 - \frac{\alpha}{2}} \right)                                               \\
+	=             & P_\mu \left( -q_{1-\frac{\alpha}{2}} \leq
+	\sqrt{n} \cdot \frac{\bar{X} - \mu_0}{\sigma} \leq q_{1 - \frac{\alpha}{2}} \right) \\
+	=             & P_\mu \left( -q_{1-\frac{\alpha}{2}} \leq
+	\sqrt{n} \cdot \frac{\bar{X} - \mu}{\sigma} + \sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma}
+	\leq q_{1-\frac{\alpha}{2}} \right)                                                 \\
+	=             & P_\mu \left( \sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma} -
+	q_{1 - \frac{\alpha}{2}} \leq Z \leq
+	\sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma} + q_{1-\frac{\alpha}{2}} \right)          \\
+	=             & \Phi \left( \sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma} +
+	q_{1-\frac{\alpha}{2}} \right) - \Phi \left( \sqrt{n} \cdot
+	\frac{\mu - \mu_0}{\sigma} - q_{1-\frac{\alpha}{2}} \right)                         \\
+	=             & h \left( \sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma} \right)
+\end{align*}
+Si può dimostrare che la funzione $h$ è pari e decrescente in $x \geq 0$ (ad $\alpha$ fissato).
+Quindi più $\sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma}$ è grande, più la curva operativa è piccola
+e quindi più grande è la potenza $1 - \beta(\mu)$.
+
+Ne segue che, per aumentare la potenza $1 - \beta(\mu)$ (lasciando $\alpha$ fissato), si può
+aumentare la taglia $n$ del campione. Più precisamente possiamo formalizzare la cosa in questo modo
+\begin{align*}
+	\beta (\mu) = & \Phi \left( \sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma} +
+	q_{1-\frac{\alpha}{2}} \right) - \Phi \left( \sqrt{n} \cdot
+	\frac{\mu - \mu_0}{\sigma} - q_{1-\frac{\alpha}{2}} \right)                 \\
+	\leq          & 1 - \Phi \left( \sqrt{n} \cdot \frac{\mu - \mu_0}{\sigma} -
+	q_{1-\frac{\alpha}{2}} \right)
+\end{align*}
+Se vogliamo che $1-\beta(\mu) \geq 1 - \beta_0$, imponiamo
+\[
+	1 - \Phi \left( \sqrt{n} \cdot \frac{|\mu_0 - \mu|}{\sigma} -
+	q_{1-\frac{\alpha}{2}} \right) \leq \beta_0
+\]
+e troviamo il valore $n$ per cui la potenza $1 - \beta(\mu) \geq 1 - \beta_0$.
+
+\begin{example}
+	Data una popolazione di salmoni, il cui peso $X \sim N(\mu, \sigma^2)$ segue una distribuzione
+	normale con deviazione standard $\sigma = 0.5$ kg, vogliamo verificare se i dati di un campione
+	di 16 esemplari sono compatibili con l'ipotesi $H_0 : \mu = 3$.
+
+	Formuliamo un test di livello $\alpha = 0.05$ per decidere se l'ipotesi $H_0$ è plausibile
+	oppure no, e vogliamo applicarlo se la media campionaria è 3.2 kg. Individuiamo quindi la
+	regione critica
+	\[
+		C = \left\{ \sqrt{n} \cdot
+		\frac{|\bar{X} - \mu_0|}{\sigma} > q_{1-\frac{\alpha}{2}} \right\} =
+		\left\{ |\bar{X}-3| > 0.245 \right\}
+	\]
+	Dato che $\bar{x} = 3.2$ abbiamo che
+	\[ |3.2 - 3| = 0.2 \leq 0.245 \]
+	e quindi $\bar{x}$ cade nella regione di accettazione quindi accettiamo $H_0$ a livello 0.05.
+	Calcoliamo ora il \textbf{$p$-value} dei dati
+	\begin{align*}
+		\bar{\alpha} (x_1, \dots, x_n) = &
+		P \left( \frac{\sqrt{n}}{\sigma} \cdot |\bar{X} - \mu_0| >
+		\frac{\sqrt{n}}{\sigma} \cdot |\bar{x} - \mu_0| \right)      \\
+		=                                &
+		P \left( |Z| > \frac{\sqrt{16}}{0.5} \cdot |3.2 - 3| \right) \\
+		=                                &
+		2 \cdot \left( 1 - \Phi \left( \frac{\sqrt{16}}{0.5} \cdot
+			|3.2 - 3| \right) \right) = 0.1096
+	\end{align*}
+	Quindi si rifiuta per $\alpha > 0.1096$ e si accetta per $\alpha < 0.1096$. Calcoliamo ora la
+	probabilità dell'errore di seconda specie assumendo $\mu = 3.4$ kg e imponendo quindi
+	\begin{align*}
+		\beta(3.4) = & \Phi \left( \sqrt{16} \cdot \frac{|3.4 - 3|}{\sigma} + 1.96 \right) -
+		\Phi \left( \sqrt{16} \cdot \frac{|3.4 - 3|}{\sigma} - 1.96 \right)                  \\
+		=            & \Phi(5.16) - \Phi(1.24) = 1 - 0.8925 = 0.1075
+	\end{align*}
+	Vogliamo ora trovare $n$ tale che la \textbf{potenza} $1 - \beta(3.4) \geq 0.95$
+	\[
+		1 - \Phi \left( \sqrt{n} \cdot \frac{|\mu_0 - \mu|}{\sigma}
+		- q_{1 - \frac{\alpha}{2}} \right) \leq 1 - 0.95 = 0.05
+	\]
+	Inserendo i dati otteniamo
+	\begin{align*}
+		1 - \Phi \left( 0.8 \cdot \sqrt{n} - 1.96 \right) \leq & 0.05  \\
+		\Phi \left( 0.8 \cdot \sqrt{n} - 1.96 \right) \geq     & 0.95  \\
+		0.8 \cdot \sqrt{n} - 1.96 \geq                         & 1.64  \\
+		\sqrt{n} \geq                                          & 4.5   \\
+		n \geq                                                 & 20.25
+	\end{align*}
+	Si conclude che $n = 21$ soddisfa l'uguaglianza.
+\end{example}
+
+\subsection{Z-test unilatero}
+Ragionamento molto simile al caso bilatero, infatti consideriamo $X \sim N(\mu, \sigma^2)$ con
+$\sigma^2$ nota e $X_1, \dots, X_n$ un campione i.i.d. di $X$. In questo caso il test è però
+unilatero e quindi abbiamo che
+\[ H_0: \mu \leq \mu_0 \qquad H_1: \mu > \mu_0 \]
+
+\subsubsection{Formulazione del test}
+L'intuizione ci spinge a rifiutare $H_0$ se $\bar{X} - \mu_0$ è grande, cioè a considerare
+una regione critica della forma
+\[ C = \{ \bar{X} - \mu_0 > d \} \]
+La condizione sul livello $\alpha$ diventa
+\[ P_\mu \{ \bar{X} - \mu_0 > d \} \leq \alpha \]
+per ogni $\mu \leq \mu_0$. Si può dimostrare che la probabilità scritta sopra cresce al crescere
+di $\mu$ e quindi basta imporre
+\[ P_{\mu_0} (\bar{X} - \mu_0 > d) = \alpha \]
+Facciamo ora uso della standardizzazione e otteniamo
+\[
+	P_{\mu_0} (\bar{X} - \mu_0 > d) =
+	P_{\mu_0} \left( \frac{\sqrt{n}}{\sigma} \cdot (\bar{X} - \mu_0) >
+	\frac{\sqrt{n}}{\sigma} \cdot d \right) = \alpha
+\]
+da cui $\frac{\sqrt{n}}{\sigma} \cdot d = q_{1-\alpha}$. Quindi
+\[
+	C = \left\{ \frac{\sqrt{n}}{\sigma} (\bar{X} - \mu_0) > q_{1-\alpha} \right\}
+	= \left\{ \bar{X} - \mu_0 > \frac{\sigma}{\sqrt{n}} \cdot q_{1-\alpha} \right\}
+\]
+La dipendenza dell'ampiezza della regione di accettazione $C^c$ dai parametri $\alpha$, $\sigma$
+ed $n$ è la stessa del caso bilatero.
+
+\subsubsection{Calcolo del p-value}
+I dati $(y_1, \dots, y_n)$ sono più estremi di $(x_1, \dots, x_n)$, rispetto ad
+$H_0: \mu \leq \mu_0$, se $\bar{y} - \mu_0 > \bar{x} - \mu_0$, quindi il $p$-value, ossia la
+probabilità, sotto $H_0$ di avere dati più estremi di $(x_1, \dots, x_n)$ è
+\[ P_\mu \left( \bar{X} - \mu_0 > \bar{x} - \mu_0 \right) \]
+Come $p$-value si prende quindi il massimo di queste probabilità, che si realizza in $\mu = \mu_0$
+\begin{align*}
+	\bar{\alpha} (x_1, \dots, x_n)
+	= & P_{\mu_0} \left( \bar{X} - \mu_0 > \bar{x} - \mu_0 \right)            \\
+	= & P_{\mu_0} \left( \frac{\bar{X} - \mu_0}{\sigma} \cdot \sqrt{n} >
+	\sqrt{n} \cdot \frac{\bar{x} - \mu_0}{\sigma} \right)                     \\
+	= & P \left( Z > \sqrt{n} \cdot \frac{\bar{x} - \mu_0}{\sigma} \right)    \\
+	= & 1 - \Phi \left( \sqrt{n} \cdot \frac{\bar{x} - \mu_0}{\sigma} \right)
+\end{align*}
+
+\subsubsection{Calcolo della curva operativa}
+Procediamo ora al calcolo della curva operativa e otteniamo
+\begin{align*}
+	\beta(\mu) = & P_\mu \left( \frac{\sqrt{n}}{\sigma} \cdot (\bar{X} - \mu_0) \leq
+	q_{1-\alpha} \right)                                                                        \\
+	=            & \Phi \left( \sqrt{n} \cdot \frac{\mu_0 - \mu}{\sigma} + q_{1-\alpha} \right)
+\end{align*}
+
+\begin{example}
+	Consideriamo ancora l'esempio dei salmoni in cui abbiamo $X \sim N(\mu, \sigma^2)$ che è la
+	distribuzione del peso degli esemplari. Sappiamo che la deviazione standard è $\sigma = 0.5$ e
+	che vengono pesati $n = 16$ salmoni. L'ipotesi nulla $H_0 : \mu \leq 3$ e quindi $H_1 > 3$. La
+	regione critica si ottiene imponendo
+	\[
+		C = \left\{ \sqrt{n} \cdot \frac{\bar{X} - \mu_0}{\sigma} > q_{1 - \alpha} \right\}
+		= \left\{ \bar{x} - 3 > 0.205 \right\}
+	\]
+	Dato che $\bar{x} = 3.2$ abbiamo che $\bar{x} - 3 \leq 0.205$ e quindi accettiamo ma siamo al
+	limite. Calcoliamo ora il \textbf{$p$-value} ottenendo
+	\begin{align*}
+		p = & P \left( \sqrt{n} \cdot \frac{\bar{X} - \mu_0}{\sigma} >
+		\sqrt{n} \cdot \frac{\bar{x} - \mu_0}{\sigma} \right)                    \\
+		=   & P \left( Z > \sqrt{n} \cdot \frac{\bar{x} - \mu_0}{\sigma} \right) \\
+		=   & P (Z > 1.6)                                                        \\
+		=   & 1 - \Phi(1.6) = 0.0548
+	\end{align*}
+	In questo caso non è ben chiaro se sia giusto accettare o rifiutare.
+\end{example}
+
+Il caso unilatero inverso $H_0 : \mu_0 \geq \mu$ e $H_1 : \mu < \mu_0$ è analogo ma si ribaltano
+le disuguaglianze e si sostituisce $q_{1 - \alpha}$ con $q_\alpha$. Abbiamo quindi una regione di
+rigetto del tipo
+\[ C = \left\{ \sqrt{n} \cdot \frac{\bar{X} - \mu_0}{\sigma} < q_\alpha \right\} \]
+e il $p$-value sarà
+\[ P \left( Z < \sqrt{n} \cdot \frac{\bar{x} - \mu_0}{\sigma} \right) \]

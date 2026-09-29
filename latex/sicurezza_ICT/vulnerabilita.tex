@@ -1,0 +1,423 @@
+\chapter{Vulnerabilità}
+Iniziamo in questo capitolo a parlare più nello specifico di \textbf{vulnerabilità} e \textbf{attacchi}.
+
+\section{Buffer overflow}
+Uno degli esempi più comuni è il \textbf{buffer overflow}, dove il \textbf{buffer} è una qualunque zona di memoria
+in cui è possibile memorizzare informazioni e l'\textbf{overflow} è un'operazione che consiste nell'andare a scrivere,
+in quella zona di memoria, più informazioni di quante essa ne possa contenere.
+
+Se il software è privo di controlli è possibile trasmettere del codice eseguibile (\textbf{code injection}) ed
+eseguirlo. Questo tipo di attacco è molto complesso ma \emph{automatizzabile} e può garantire il pieno controllo del
+sistema.
+
+L'attacco si basa sull'operazione di copia di una stringa in una struttura dati: una volta capito quale caratteristiche
+deve avere la stringa l'attacco è molto semplice e dato che è automatizzabile potrebbe essere condotto da chiunque.
+
+\subsection{Memoria di un processo}
+Per capire il buffer overflow è fondamentale capire la struttura della memoria di un processo, la quale è organizzata
+in tre segmenti: \emph{text}, \emph{data} e \emph{stack}.
+\begin{itemize}
+	\item Il \textbf{text segment} ha dimensione fissa, memorizza il codice del programma ed è in sola lettura. Ogni
+	      tentativo di scrittura provoca un \emph{segmentation fault}.
+	\item Il \textbf{data segment} memorizza variabili statiche e dinamiche.
+	\item Lo \textbf{stack segment} memorizza i dati per gestire \emph{call} e \emph{return} di funzioni.
+\end{itemize}
+
+\subsection{Stack overflow}
+Un tipico esempio di buffer overflow è quello dello \textbf{stack overflow}, con il quale si sfruttano linguaggi di
+basso livello come il C per poter scrivere codice in memoria da locale.
+
+Questo tipo di attacco sfrutta il fatto che scrivere una stringa di una certa dimensione in un buffer di dimensione
+inferiore, provoca un \emph{segmentation fault}. Il risultato finale è aver sovrascritto, con la parte di stringa che
+non è entrata nel buffer, lo stack del processo all'indirizzo di ritorno del processo stesso.
+
+Di norma, se l'indirizzo di ritorno del processo è valido, non viene sollevata alcuna eccezione e l'esecuzione continua
+eseguendo l'istruzione a quell'indirizzo. L'attacco sfrutta l'assenza di controlli per sostituire l'indirizzo di ritorno
+con un puntatore al codice iniettato.
+
+In genere si prova ad attaccare procedure al livello di kernel del sistema operativo dato che queste sono eseguite
+in stato \emph{root} e, nel caso l'attacco riuscisse, si ottiene una shell con privilegi di amministratore.
+
+Se sappiamo come scrivere la stringa in modo da cancellare l'indirizzo di ritorno e sostituirlo con un puntatore al
+codice iniettato si ottiene un attacco automatizzabile molto semplice da eseguire.
+
+\subsection{Contromisure}
+Per ovviare al problema degli attacchi buffer overflow ci sono varie contromisure:
+\begin{itemize}
+	\item \textbf{Meccanismo di tipi forte} con conseguente aumento di overhead nell'esecuzione del software.
+	\item \textbf{ASLR}: generazione casuale degli indirizzi dei vari segmenti così da impedire all'attaccante di
+	      conoscere staticamente i vari indirizzi.
+	\item \textbf{Canary}: inserzione di un valore casuale prima dell'indirizzo di ritorno. Tale valore viene generato
+	      ad ogni invocazione di funzione e prima che la funzione ritorni si verifica che tale valore non sia stato
+	      cambiato.
+	\item \textbf{Stack non eseguibile}: si costruisce uno stack che contiene solo variabili e non codice.
+	\item \textbf{Shadow stack}: si crea una copia dello stack dove verranno inseriti solo gli indirizzi di ritorno
+	      e non le variabili o le istruzioni e prima di ritornare si confrontano i valori dello stack copia con quello
+	      originale e nel caso in cui non coincidano potrebbe essere segno di un attacco di tipo buffer overflow.
+\end{itemize}
+
+\subsubsection{Vulnerabilità}
+Le vulnerabilità di un software in C che permettono questo attacco sono:
+\begin{itemize}
+	\item Il mancato controllo sulla dimensioni delle variabili
+	\item Cattivo sistema di tipi
+	\item Non c'è controllo su operazioni di memoria errate
+	\item Errata dimensione dello stack
+\end{itemize}
+
+\section{Vulnerabilità strutturali TCP/IP}
+Quando è nato lo stack TCP/IP, uno degli obbiettivi era costruire una rete che sopravvivesse ad attacchi fisici
+distruttivi per i componenti.
+
+Esistono dei metodi per capire se un nodo in rete è ancora attivo e raggiungibile ma non è possibile capire l'origine
+delle comunicazioni.
+
+Per controllare se un nodo \verb|B| è attivo, un nodo \verb|A| potrebbe inviare un messaggio di \verb|ECHO|, a cui
+\verb|B| risponde con lo stesso messaggio.
+
+Per verificare con un solo messaggio se più nodi sono attivi è possibile specificare un indirizzo parziale per
+\verb|ECHO| in modo da realizzare una comunicazione di tipo uno a molti.
+
+Con il protocollo IPv4 non esiste un controllo sui campi di un pacchetto dunque un utente potrebbe spacciarsi per un
+altro senza problemi.
+
+\subsection{Distributed denial of service}
+Supponiamo di avere una rete \verb|R| di 1000 nodi, con un indirizzo parziale \verb|X| comune a tutti i nodi in
+\verb|R|. A questo punto un attaccante \verb|A| potrebbe condurre un attacco di questo tipo:
+\begin{enumerate}
+	\item \verb|A| manda un messaggio di \verb|ECHO| all'indirizzo parziale \verb|X| dicendo di essere \verb|B|.
+	\item Tutti i nodi di \verb|R| rispondono a \verb|B| con il messaggio di \verb|ECHO|.
+	\item \verb|B| per un certo periodo di tempo non riesce a comunicare perché le sue linee di comunicazione sono
+	      intasate.
+\end{enumerate}
+L'effetto di questo attacco si può amplificare aumentando il numero di nodi che hanno il ruolo di \verb|A| (nodi
+\emph{zombie}).
+
+Difendersi da questo attacco è molto difficile dato che \verb|B| non ha modo di capire che l'attacco è in preparazione.
+
+\subsection{Contromisure}
+Per quanto riguarda questi attacchi l'unica soluzione possibile è l'autenticazione del mittente che instaura la
+connessione e invia il pacchetto tramite IPv6.
+
+\section{Classificazione delle vulnerabilità}
+In generale non esiste un metodo unico per classificare una vulnerabilità. Esistono diverse tassonomie, ognuna delle
+quali in grado di classificarle in modo più o meno accurato in relazione al problema che si vuole risolvere.
+
+Un possibile metodo di classificazione di una vulnerabilità funziona in base al \emph{dove} questa si trova. Nello
+specifico si parla di vulnerabilità
+\begin{itemize}
+	\item \textbf{Procedurale} quando le azioni eseguite non sono ben definite.
+	\item \textbf{Organizzative} quando le azioni sono ben definite ma gli utenti le eseguono male.
+	\item \textbf{Strumentali} (sistema operativo, compilatori, supporti a tempo di esecuzione e così via) quando le
+	      azioni sono ben definite ed eseguite ma con cattivi strumenti.
+\end{itemize}
+
+Un'altra possibile classificazione, spesso non rigorosa ed ambigua, è quella relativa agli strumenti che divide le
+vulnerabilità come segue:
+\begin{itemize}
+	\item Di \textbf{specifica}: uno strumento è più generale di quanto richiesto.
+	\item \textbf{Implementative}: errore nel codice di uno strumento.
+	\item \textbf{Strutturali}: uno o più strumenti vengono integrati in unico sistema causando comportamenti anomali.
+\end{itemize}
+
+\section{Ciclo di vita delle vulnerabilità}
+Il ciclo di vita di una vulnerabilità segue queste fasi:
+\begin{enumerate}
+	\item Nasce quando qualcuno commette un errore.
+	\item Diventa nota quando qualcuno la scopre.
+	\item Diventa pubblica quando la sua presenza viene rivelata.
+	\item Inizio di due attività parallele:
+	      \begin{itemize}
+		      \item Ricerca di un modo per eliminarla.
+		      \item Ricerca di un exploit per sfruttarla.
+	      \end{itemize}
+	\item In base a chi arriva prima potrebbe diventare una vulnerabilità sfruttata.
+	\item Quando è disponibile un modo per eliminarla deve essere applicato.
+\end{enumerate}
+
+\subsection{Patch}
+Le \textbf{patch} del software, ovvero l'eliminazione di una o più vulnerabilità, solitamente sono file eseguibili e
+non codice sorgente, la cui esecuzione apporta modifiche o sostituisce i file binari già presenti.
+
+Le patch possono essere anche essere rilasciate sotto forma di file di testo contenenti le differenze tra le varie
+versioni, sarà poi compito del gestore di versioni (CVS) generare la vera e propria patch in locale. Si tratta di una
+soluzione solitamente usata da sistemi open source in cui è l'utente a dover compilare i nuovi sorgenti.
+
+Una nuova patch potrebbe però introdurre problematiche che richiedono una \textbf{regressione} della versione software.
+
+Occorre quindi un \textbf{test di regressione} in grado di verificare il corretto funzionamento dopo
+\begin{itemize}
+	\item L'implementazione di una nuova funzionalità
+	\item La correzione di eventuali bug
+\end{itemize}
+Per garantire la qualità del software è essenziale verificare che il codice aggiunto non pregiudichi le funzionalità
+esistenti.
+
+\section{Ricerca delle vulnerabilità}
+Per effettuare una ricerca delle vulnerabilità occorre distinguerle in tre categorie:
+\begin{itemize}
+	\item \textbf{Note}: pubbliche in moduli noti (molto comuni).
+	\item \textbf{Non pubbliche}: scoperte ma non pubblicate.
+	\item \textbf{Zero day}: scoperte e non pubblicate per essere utilizzate nelle intrusioni (molto rare).
+\end{itemize}
+
+Ogni sistema può essere descritto come una composizione di moduli standard e specializzati. I moduli standard sono
+affetti da vulnerabilità note mentre quelle di moduli specializzati non lo sono. Una strategia efficace di ricerca
+delle vulnerabilità opera in quest'ordine:
+\begin{enumerate}
+	\item Ricerca di vulnerabilità in moduli standard.
+	\item Ricerca di vulnerabilità in moduli specializzati.
+	\item Ricerca di vulnerabilità strutturali nate dalla composizione delle due tipologie di modulo.
+\end{enumerate}
+
+\subsection{Inventario}
+Un passo fondamentale per trovare le vulnerabilità di un sistema è conoscere i moduli standard che utilizza, a tal
+fine occorre un \textbf{inventario} dei moduli. Costruire l'inventario non è banale e spesso rappresenta il problema
+di sicurezza più complesso ed è anche per questo che esistono strumenti informatici con l'unico fine di costruire
+inventari.
+
+Una volta costruito l'inventario è necessario produrre del softare cosiddetto \textbf{bill of materials}, il quale
+richiede inventario e provenienza dei vari moduli.
+
+\subsection{Vulnerability scanner}
+Il \textbf{vulnerability scanner} è uno strumento che permette di costruire un inventario e conoscere le vulnerabilità
+note dei moduli dei vari nodi.
+
+Lo strumento opera su un certo sottoinsieme di nodi e fornisce i moduli di ogni nodo che interagiscono con gli altri
+moduli e le vulnerabilità di questi moduli. In particolare, sfrutta il fatto che ogni modulo opera su una particolare
+porta del nodo e invia pacchetti sulla porta e dall'analisi delle risposte deduce quale modulo sta operando. Una volta
+riconosciuto il modulo ricerca le sue vulnerabilità note in appositi database.
+
+\subsubsection{Fingerprinting attivo}
+Questo tipo di \emph{vulnerability scanner} opera, inviando sulle porte note (es. 80), dei pacchetti che violano lo
+standard del protocollo.
+
+Tutte le implementazioni del servizio rispondono allo stesso modo a pacchetti che rispettano il protocollo, rispondono
+in modo diverso a pacchetti lo violano.
+
+Conoscendo le risposte a richieste non standard si possono identificare i moduli che implementano un servizio su una
+porta nota.
+
+\subsubsection{Fingerprinting passivo}
+In questo caso si opera senza interferire con il sistema da analizzare raccogliendo ed analizzando pacchetti in rete
+in maniera trasparente.
+
+In base ad alcune caratteristiche dei pacchetti si riesce a dedurre i moduli che li hanno prodotti.
+
+Rinunciare all'approccio attivo rende il procedimento molto meno invasivo ma i pacchetti da analizzare sono molti di
+più, si ha quindi un aumento del tempo di scanning.
+
+\subsubsection{Possibili errori}
+Un \emph{vulnerability scanner} potrebbe riconoscere il modulo che implementa un certo servizio e accedere ad un
+database con le relative vulnerabilità che potrebbero essere state patchate. In questo caso si ha un \textbf{falso
+	positivo}.
+
+Si possono avere anche casi di \textbf{falso negativo} quando una vulnerabilità non viene segnalata dato che non
+appartiene al database usato ma è comunque presente nel sistema.
+
+\subsection{Matrice di confusione}
+La \textbf{matrice di confusione} è uno strumento nato in medicina per analizzare fenomeni complessi, i quali non
+possono essere risolti utilizzando un metodo booleano.
+
+In medicina quando si vuole sapere se un paziente ha una certa malattia si effettuano dei test, i quali vengono
+condotti in base ai sintomi. Il risultato del test può essere positivo o negativo in entrambi i casi si deve sempre
+considerare la possibilità di errore del test (falso positivo/negativo).
+\begin{center}
+	\begin{tabular}{ c c | c c }
+		                                      &   & \multicolumn{2}{ c }{ Caratteristica }                  \\
+		                                      &   & F                                      & T              \\
+		\hline
+		\multirow{2}{2.5 cm}{ Vulnerabilità } & F & vero negativo                          & falso positivo \\
+		                                      & T & falso negativo                         & vero postivo
+	\end{tabular}
+\end{center}
+In ambito informatico si compie un procedimento analogo per riuscire a capire quali moduli producono un certo servizio
+in base alla risposta che il nodo su cui facciamo il test ci fornisce.
+
+\section{Sistema di misurazione delle vulnerabilità}
+Si tratta di uno strumento per \emph{misurare} la pericolosità delle vulnerabilità assegnando loro un punteggio da 0 a
+10: più alto è il punteggio e più pericolosa è quella vulnerabilità.
+
+Come già detto, valutare una vulnerabilità indipendentemente dal sistema non ha alcun senso poiché potrebbe essere
+critica per alcuni sistemi ma assolutamente innocua per altri.
+
+Il punteggio viene assegnato in base a tre parametri:
+\begin{itemize}
+	\item \textbf{Base}: caratteristica intrinseca e fondamentale indipendente dal tempo e dall'ambiente.
+	\item \textbf{Temporale}: caratteristica che cambia nel tempo ma è indipendente dall'ambiente.
+	\item \textbf{Ambientale}: caratteristica specifica e solo per un particolare ambiente.
+\end{itemize}
+
+\subsection{Vettore di accesso}
+Il \textbf{vettore di accesso} indica il metodo di accesso necessario per sfruttare la vulnerabilità. Può essere
+\begin{itemize}
+	\item \textbf{Fisico}: è necessario avere accesso all'hardware su cui è implementato il sistema.
+	\item \textbf{Locale}: è necessario avere accesso ad un account del sistema.
+	\item \textbf{Adicaente}: è necessario avere accesso ad una sottorete.
+	\item \textbf{Network}: è possibile arrivare al sistema da un qualsiasi nodo della rete.
+\end{itemize}
+Quando il vettore di accesso è fisico la sicurezza è massima mentre un vettore di accesso di tipo network crea più
+problemi.
+
+\subsection{Complessità dell'attacco}
+Indica quanto è \emph{difficile} effettuare l'attacco: più l'attacco è complesso più il nostro sistema è sicuro, al
+contrario, un attacco semplice da eseguire è sintomo di un sistema vulnerabile.
+
+\subsection{Privilegi richiesti e interazione utente}
+Indica quali diritti sono necessari per eseguire l'attacco
+\begin{itemize}
+	\item \textbf{Nessuno}: l'attacco si può eseguire senza alcun diritto sul sistema.
+	\item \textbf{Basso}: in genere si parla di avere accesso a privilegi base che un qualsiasi utente del sistema
+	      possiede.
+	\item \textbf{Alto}: quando è necessario avere diritti su componenti critiche del sistema, ad esempio essere
+	      amministratore.
+\end{itemize}
+e se è necessaria l'interazione dell'utente come nel caso del \emph{phishing}.
+
+\subsection{Livello dell'exploit}
+Questa parametro indica se esiste del codice per sfruttare una vulnerabilità e se questo è affidabile o meno.
+
+\section{Numero di vulnerabilità}
+Il numero di vulnerabilità \emph{note} di un software non è indice della qualità di quest'ultimo. In generale possiamo
+dire che tale numero è direttamente proporzionale al numero \emph{totale} di vulnerabilità del sistema e al numero di
+utenti che ricercano vulnerabilità in quel sistema.
+
+Il numero di ricercatori è proporzionale al valore di una certa vulnerabilità in quanto una vulnerabilità di un
+prodotto poco usato non interessa a nessuno. Il fatto che ci siano tanti ricercartori è sintomo di popolarità di un
+determinato software.
+
+\subsection{Scoperta di vulnerabilità}
+Spesso, per scoprire una vulnerabilità, è necessario uno strumento di \emph{reverse engineering} per passare da
+eseguibile ad un versione di controllo.
+
+Una volta effettuata la conversione si può procedere con un'analisi manuale o tramite strumenti automatizzati di
+\begin{itemize}
+	\item \textbf{Analisi statica} (\textbf{SAST}): sono strumenti che dipendono dal linguaggio di programmazione
+	      utilizzato e dal contesto in cui si trova il sistema.
+	\item \textbf{Analisi dinamica} (\textbf{Fuzzing}): basato sulla generazione e trasmissione di valori errati come
+	      input del programma.
+\end{itemize}
+
+\subsubsection{SAST}
+Tra i punti di forza del SAST abbiamo
+\begin{itemize}
+	\item La scalabilità poiché permette di analizzare grandi quantità di codice a basso costo.
+	\item L'identificazione di un sottoinsieme di classi di vulnerabilità quali buffer e stack overflow o SQL
+	      injection.
+	\item I risultati aiutano gli sviluppatori ad individuare le istruzioni coinvolte.
+\end{itemize}
+Le debolezze di questo sistema sono invece
+\begin{itemize}
+	\item La difficoltà nell'implementazione di analisi per la ricerca di alcune vulnerabilità come
+	      \begin{itemize}
+		      \item Problemi di autenticazione
+		      \item Gestione errata dei diritti
+		      \item Uso non sicuro della crittografia
+	      \end{itemize}
+	\item Potenza limitata in quanto possono individuare basse percentuali di vulnerabilità.
+	\item Elevato numero di false positive.
+	\item Incapace di identificare problemi di sicurezza dovuti alla configurazione che non possono essere scoperti
+	      dal codice.
+	\item Spesso non analizzano librerie.
+\end{itemize}
+
+\subsubsection{Fuzzing}
+L'idea di base del \textbf{fuzzing} è inviare al software degli input errati o malformati cercando di causare il blocco
+dell'applicazione o un suo malfunzionamento, evidenziando così una vulnerabilità non ancora nota.
+
+Per riuscire a fare del fuzzing in maniera efficiente è necessario automatizzare il processo vista la grande quantità
+di dati da fornire in input.
+
+\section{Fuzzing}
+Entriamo ora nello specifico di questa tecnica largamente utilizzata per la ricerca di vulnerabilità all'interno di un
+sistema. In generale possiamo dire che gli strumenti di fuzzing sono il risultato di tre moduli:
+\begin{itemize}
+	\item Il \textbf{generatore} di input malformati.
+	\item Il \textbf{distributore dei dati} verso il modulo target.
+	\item Un \textbf{componente di monitoraggio} per gestire eventuali errori e scoprire il percorso del dato in input
+	      nel modulo.
+\end{itemize}
+Abbiamo tre tipologie principali di fuzzing:
+\begin{itemize}
+	\item \textbf{Application}: testa funzioni come pulsanti e campi di immissione dei programmi grafici o le opzioni
+	      dei programmi della riga di comando.
+	\item \textbf{Protocol}: verifica il comportamento del programma in caso di invio di dati di formato errato.
+	\item \textbf{File format}: genera file errati o di formato non atteso e li manda in input al software.
+\end{itemize}
+
+\subsection{Scanning}
+Torniamo indietro alla fase di scanning, eseguita sia dall'attaccante che dal difensore. Ovviamente il difensore è
+interessato a sapere se qualcuno sta cercando vulnerabilità nel suo sistema, ecco perché ogni scanner permette di
+decidere la frequenza con cui si inviano i messaggi ad un certo nodo ed il numero di nodi analizzati in parallelo.
+
+La probabilità di un attaccante di essere scoperto è tanto minore quanto minore è la frequenza di messaggi inviati e
+il numero di nodi analizzati.
+
+\subsubsection{Client scanning}
+Ci sono anche casi di \textbf{client scanning} in cui è un server che esegue uno scanning su un client che prova a
+connettersi per capire come esso sia configurato, quali sono eventuali vulnerabilità ecc.
+
+Questa pratica è considerata molto ambigua in quanto, a volte, permette di entrare in possesso di informazioni
+personali dell'utente andando a comportare importanti problemi di privacy.
+
+\subsection{Classi di fuzzer}
+Un \textbf{fuzzer} può essere classificato in diversi modi:
+\begin{itemize}
+	\item Gli input possono essere generati da zero o modificando quelli esistenti:
+	      \begin{itemize}
+		      \item \textbf{Generation based}
+		      \item \textbf{Mutation based}
+	      \end{itemize}
+	\item Può conoscere la struttura dell'input in modo da modificare punti specifici o violando in uno o più punti
+	      la struttura:
+	      \begin{itemize}
+		      \item \textbf{Grammar based}
+		      \item \textbf{Not grammar based}
+	      \end{itemize}
+	\item Può conoscere a diversi livelli la struttura del programma ed utilizzarla per garantire di aver testato tutti
+	      i cammini:
+	      \begin{itemize}
+		      \item \textbf{White box}
+		      \item \textbf{Black box}
+		      \item \textbf{Gray box}
+	      \end{itemize}
+	\item Si può applicare al codice o ad un parser:
+	      \begin{itemize}
+		      \item \textbf{Text fuzzing}
+	      \end{itemize}
+\end{itemize}
+
+\subsection{Tainting analysis}
+La \textbf{tainting analysis} è un'analisi statica preliminare che va ad associare ad un certo input le istruzioni che
+andranno a lavorare su quello specifico input.
+
+Questa pratica permette scoprire quali istruzioni ricevono un input e quindi di calcolare l'insieme di variabili di
+un possibile buffer overflow. In genere restituisce un insieme più grande di quello effettivo (falsi positivi).
+
+\subsection{Regole euristiche}
+Per effettuare un buon fuzzing si dovrebbe sempre tenere a mente queste regole:
+\begin{itemize}
+	\item La conoscenza del formato dell'input è molto utile.
+	\item Fuzzer generazionali sono migliori di fuzzer casuali.
+	\item Usare diversi tipi di fuzzer permette di trovare diversi tipi di vulnerabilità.
+	\item Più è ampio il tempo di esecuzione di un fuzzer maggiore è la probabilità di trovare vulnerabilità.
+	\item Il processo deve essere guidato.
+	\item Capire quando il fuzzer non riesce a sollecitare istruzioni non ancora utilizzate.
+\end{itemize}
+
+\section{Vulnerabilità strutturali}
+Per scoprire questo tipo di vulnerabilità non esistono strumenti in grado di considerare un insieme di moduli
+cooperanti. Esistono fuzzer in grado di monitorare moduli esterni ma non in grado di operare su più moduli
+contemporaneamente. In generale, le cause di tali vulnerabilità possono essere molteplici:
+\begin{itemize}
+	\item \textbf{Input non controllati}: il fallimento nel ricevente di un valore indica la mancanza di controlli su
+	      valori ricevuti ma anche la mancanza di controlli dalla parte di chi invia il valore.
+	\item \textbf{Mancata autenticazione}: il sistema non compie un'autenticazione dei canali in ingresso, ossia non
+	      si preoccupa di chi può inviare messaggi su un certo canale o porta.
+	\item \textbf{Delega dei controlli}: in alcuni casi si delegano i controlli ad un altro modulo permettendo così
+	      l'invio di dati manipolati nel momento in cui manca un sistema di autenticazione.
+	\item \textbf{Mancata valutazione dei messaggi}: non si controlla se i messaggi sono: ripetuti, mancanti o inviati
+	      in ordine diverso da quello atteso.
+	\item \textbf{Scambio di informazioni non protette}: uno scambio non protetto può permettere accesso ad informazioni
+	      interne ad un modulo e ad una catena di attacchi che sfruttano l'informazione acquisita.
+\end{itemize}

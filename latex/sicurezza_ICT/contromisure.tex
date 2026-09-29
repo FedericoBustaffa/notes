@@ -1,0 +1,457 @@
+\chapter{Contromisure}
+Quando parliamo di \textbf{contromisure} facciamo riferimento a delle modifiche che il difensore fa al sistema in
+risposta alle intrusioni. Una prima classificazione delle contromisure le divide in tre grandi categorie:
+\begin{itemize}
+	\item \textbf{Proattive}: Applicate prima di un'intrusione per impedirla.
+	\item \textbf{Dinamiche}: Applicate durante un'intrusione per fermarla.
+	\item \textbf{Reattive}: Applicate dopo un'intrusione per fermare quelle successive.
+\end{itemize}
+Il processo per l'eliminazione delle vulnerabilità prevede i seguenti passi:
+\begin{enumerate}
+	\item Prevenire
+	\item Resistere
+	\item Scoprire
+	\item Ripristinare
+	\item Reagire
+\end{enumerate}
+
+\section{Robustezza e resilienza}
+Due punti cardine della sicurezza sono \textbf{robustezza} e \textbf{resilienza}.
+
+Per \emph{robustezza} si intende la capacità di un sistema di \emph{respingere} le intrusioni ma nel caso in cui il
+sistema venga violato le prestazioni (in termini di sicurezza) calano. La capacità di un sistema di ripristinare la
+robustezza dopo un'intrusione è detta \emph{resilienza}.
+
+\subsection{Ridondanza ed eterogeneità}
+Due punti importanti su cui si basano i principi di robustezza e resilienza sono \textbf{ridondanza} ed
+\textbf{eterogeneità}.
+
+\subsubsection{Ridondanza}
+La \emph{ridondanza} si ottiene sovradimensionando il sistema con componenti o procedure \emph{inutili} ai fini di
+funzionamento del sistema ma che sono molto utili nel momento in cui il sistema viene attaccato o violato per
+resistere all'attacco o ripristinare lo stato sicuro. La ridondanza può essere di vario tipo:
+\begin{itemize}
+	\item \textbf{Ridondanza fredda}: componenti inattive che vengono attivate solo quando il sistema viene attaccato
+	      per riuscire a ripristinare lo stato sicuro.
+	\item \textbf{Ridondanza calda}: componenti sempre attive in modo da riuscire a sopportare meglio gli attacchi.
+	\item \textbf{Triple Modular Redundancy}: ridondanza calda dove tre copie di uno stesso modulo prendono lo stesso
+	      input ed eseguono la stessa computazione \emph{votando} infine il risultato. Aumenta la safety ma non sempre
+	      la security.
+\end{itemize}
+
+\subsubsection{Eterogeneità}
+Per \emph{eterogeneità} si intende l'uso di componenti diversi che svolgono compiti simili per evitare la caduta del
+sistema su una singola vulnerabilità. Se un componente ha una vulnerabilità e più nodi del sistema hanno quel
+componente, tutti i nodi con quel componente avranno quella vulnerabilità.
+
+Un tipico esempio di eterogeneità è quello in cui si usano sistemi operativi diversi su una stessa rete.
+
+\subsection{Sistema minimale}
+Una buona pratica per la sicurezza è quella di costruire un sottoinsieme del sistema, formato da componenti
+particolarmente robusti e spesso eterogenei rispetto a quelli del sistema principale.
+
+Il sistema minimale è quello da cui parte il ripristino del normale funzionamento del sistema.
+
+La violazione del sistema minimale comporta l'incapacità di ripristinare il sistema dopo un attacco.
+
+\section{Meccanismi per contromisure}
+L'implementazione di contromisure è basata di meccanismi condivisi i quali devono essere molto robusti dato che una
+loro vulnerabilità potrebbe influenzare molte contromisure del sistema.
+
+Tali meccanismi sono implementati su un security kernel che fa parte del TCB e che gestisce: l'\textbf{identità},
+l'\textbf{autenticazione} e i \textbf{diritti} degli utenti.
+
+\subsection{Autenticazione}
+Per implementare un buon meccanismo di autenticazione si fa sempre riferimento alla tripla
+\begin{center}
+	\verb|<soggetto, oggetto, operazione>|
+\end{center}
+la quale associa ad un soggetto un certo diritto. Possiamo associare due tipi di controlli a questa tupla:
+\begin{itemize}
+	\item Controlli sull'identità del soggetto.
+	\item Controlli sul possesso del diritto \verb|<oggetto, operazione>|.
+\end{itemize}
+Il controllo sul possesso dei diritti dei vari utenti e la loro gestione è compito del sistema operativo. Anche
+l'autenticazione è compito del sistema operativo ma attualmente esistono componenti specializzati per l'autenticazione
+che forniscono un token in grado di certificare in qualche modo l'avvenuta autenticazione.
+
+\subsubsection{Tipi di autenticazione}
+Esistono tre tipi principali di autenticazione:
+\begin{itemize}
+	\item \textbf{Debole statica}: include password e altre tecniche soggette ad attacchi che cercano di riprodurre
+	      le sequenze di autenticazione.
+	\item \textbf{Debole non statica}: fa uso di meccanismi crittografici per creare password utilizzabili per una
+	      singola sessione. Può essere compromessa da attacchi di tipi \emph{session hijacking}, ossia dal
+	      \emph{furto} della sessione.
+	\item \textbf{Forte}: utilizza forti meccanismi crittografici per prevenire i principali problemi legati
+	      all'autenticazione debole.
+\end{itemize}
+
+\subsubsection{Meccanismi di autenticazione}
+Tra i meccanismi di autenticazione più comuni abbiamo:
+\begin{itemize}
+	\item L'utilizzo di frasi o numeri che solo l'utente conosce. Per difendersi da possibili attacchi, in genere si
+	      salva un hash di queste informazioni e non l'informazione in chiaro. Un altro metodo consiste nell'uso di
+	      database diversi per impedire attacchi che precalcolano l'hash.
+	\item L'utilizzo di qualcosa che solo l'utente possiede, come una chiave di cifratura. Con questo metodo di
+	      autenticazione si può
+	      \begin{itemize}
+		      \item Generare il prossima bit di una sequenza pseudocasuale.
+		      \item Applicare una funzione condivisa ad un valore ricevuto dal server e restituire il risultato.
+	      \end{itemize}
+	\item L'utilizzo di parametri biometrici. Questo tipo di autenticazione porta con sé problemi di falsi
+	      positivi/negativi, attacchi alla trasmissione di informazioni biometriche e difficoltà nel cambiare la
+	      password.
+\end{itemize}
+
+\subsubsection{Kerberos}
+Il sistema \textbf{Kerberos} permette ad un client di autenticarsi con un server tramite due entità: un \textbf{KDC}
+(Key Distribution Center) e un \textbf{TGS}	(Ticket Granting Service).
+
+Il KDC condivide con ogno entità del sistema (client, server e TGS) una chiave di cifratura. Per un client, conoscere
+tale chiave equivale ad essere autenticato.
+
+Un client che si connette al sistema deve essere in grado di decifrare qualsiasi cosa cifrata con la chiave che il KDC
+gli ha fornito. Dato che il sistema comunica con gli utenti tramite messaggi crittografati, un utente malizioso che si
+finge qualcun altro non sarebbe in grado di decifrare tali messaggi e dunque non riuscirebbe ad autenticarsi.
+
+Supponiamo ora che un utente $A$ voglia autenticarsi ad un server tramite Kerberos:
+\begin{enumerate}
+	\item In una fase preliminare il KDC condivide due chiavi simmetriche $k_{TGS}$ e $k_A$ rispettivamente con il TGS
+	      e con $A$.
+	\item L'utente $A$ richiede i servizi del server $S$ e fa richiesta al sistema identificandosi come $A$.
+	\item Il KDC invia informazioni cifrate con la chiave $k_A$ ad $A$ per interagire con il TGS.
+	\item L'utente $A$ decifra le informazioni e le invia al TGS. Ciò che $A$ invia al TGS è cifrato con la chiave
+	      del TGS.
+	\item Il TGS decifra ciò che $A$ gli ha inviato e se ottiene informazioni consistenti fornisce un ticket di
+	      validità temporanea ad $A$.
+	\item $A$ usa il ticket per autenticarsi con $S$ ed essere quindi in grado di usufruire dei suoi servizi.
+\end{enumerate}
+Il KDC e il TGS gestiscono dei database in cui sono memorizzate le \emph{master key} dei client e dei server registrati.
+Le \emph{master keys} all'interno del database sono criptate con la chiave privata rispettivamente del KDC e del TGS.
+Se qualcuno venisse a conoscenza di queste due chiavi, l'intero sistema sarebbe compromesso.
+
+\subsection{Controllo e gestione dei diritti}
+Una volta avvenuta l'autenticazione l'utente è riconosciuto dal sistema ma ciò che può fare all'interno di esso dipende
+dai diritti che possiede.
+
+Per controllare quali diritti un soggetto $S_i$ ha nel sistema si fa utilizzo della \textbf{matrice di controllo degli
+	accessi}, la quale mette in relazione il soggetto $S_i$ che vuole compiere un'azione e l'oggetto $O_j$ su cui viene
+compiuta e ricava i diritti (o operazioni $op_{ij}$) che quel soggetto ha (o può fare) sull'oggetto.
+\begin{center}
+	\begin{tabular}{ c | c | c | c | c |}
+		      & $O_1$ & $O_2$     & \dots     & $O_n$ \\
+		\hline
+		$S_1$ &       & $op_{12}$ &           &       \\
+		\hline
+		$S_2$ &       &           &           &       \\
+		\hline
+		\dots &       &           & $op_{ij}$ &       \\
+		\hline
+		$S_m$ &       &           &           &       \\
+		\hline
+	\end{tabular}
+\end{center}
+In genere una matrice del genere è presente a livello di sistema operativo per protezione di zone di memoria, file,
+dispositivi di I/O e porte dei vari protocolli. Possono esserci matrici di controllo anche a livello applicativo per
+le specifiche applicazioni nel caso fosse necessario.
+
+In generale la matrice del sistema operativo determina quali utenti possono interagire con un'applicazione. Questo si
+può controllare mediante il meccanismo delle porte o dei canali di comunicazione.
+
+Per gli utenti che possono interagire la matrice determina quali operazioni nello specifico possono essere eseguite
+sull'oggetto. Se invece un utente non può interagire conviene impedire l'interazione al livello più basso possibile
+e scartare la richiesta.
+
+Tutte queste operazioni di controllo comportano un \emph{overhead}, in particolare l'operazione di scarto di una
+richiesta e rende il sistema più soggetto ad attacchi di tipo DOS. Ecco perché è fondamentale compiere ottimizzazioni
+per scartare le richieste il prima possibile.
+
+\subsection{Implementazione della matrice}
+La matrice di controllo degli accessi può essere implementata principalmente in due modi:
+\begin{itemize}
+	\item Per \textbf{righe}: soluzione a \emph{capability} o \emph{ticket}.
+	\item Per \textbf{colonne}: soluzione a \emph{lista di controllo} degli accessi (ACL).
+\end{itemize}
+La soluzione a \emph{capability} memorizza le informazioni relative ad un oggetto e alle relative operazioni che si
+possono effettuare su esso ad un certo indirizzo (logico o fisico).
+
+Questo indirizzo viene memorizzato nell'ambiente del soggetto. Quando un soggetto vuole eseguire un'operazione deve
+indicare l'operazione che vuole eseguire e la \emph{capability} di cui dispone.
+
+\subsection{Capability}
+La soluzione a \emph{capability} memorizza le informazioni nel soggetto che poi presenta all'oggetto le operazioni
+che può fare.
+
+La soluzione a \emph{capability} più nota è quella per la protezione dei segmenti di memoria. Questa tecnica è
+implementata tramite la tabella usata per la traduzione da indirizzi logici a fisici, nella quale troviamo anche un
+gruppo di bit che indicano le operazioni possibili su quel segmento.
+
+Nel caso più generale, ogni puntatore ad un oggetto diventa un puntatore protetto che indica anche quali sono le
+operazioni possibili sull'oggetto puntato.
+
+I puntatori vengono memorizzati nell'ambiente del soggetto e devono essere adeguatamente protetti per evitare che il
+soggetto li manipoli in modo improprio. Un tipico approccio per la protezione è la cifratura dei puntatori non usati
+e la successiva decifrazione solo in fase di utilizzo.
+
+\subsubsection{Implementazione centralizzata}
+Sono architetture progettate e costruite dove tutti i puntatori sono \emph{capability} protette dall'hardware e/o dal
+sistema operativo tramite registri specializzati.
+
+In questo caso una funzione viene denominata da un indice in un segmento o in una tabella protetta dal sistema
+operativo.
+
+\subsubsection{Implementazione distribuita}
+Questa soluzione non prevede una protezione delle \emph{capability} a livello hardware o di sistema operativo dato che
+queste devono essere trasmesse in rete.
+
+In questo caso si fa uso di crittografia per la protezione delle \emph{capability}. Chi fornisce un servizio o gestisce
+un oggetto gestisce anche un \textbf{segreto}. L'utente che richiede il servizio \emph{firma} la richiesta o parte di
+essa con la sua chiave privata così che chiunque possa verificare l'identità tramite la sua chiave pubblica.
+
+Questo tipo di implementazione possiede le seguenti proprietà:
+\begin{itemize}
+	\item \textbf{Protezione} dal \emph{tampering} (non si può manipolare) e dal \emph{furto} (se chi la presenta
+	      viene autenticato).
+	\item \textbf{Controllo della propagazione}: la \emph{capability} può essere creata solo dal gestore.
+	\item \textbf{Delega}: un soggetto può trasmettere ad altri la capability ma si possono creare problemi con la
+	      protezione.
+	\item \textbf{Revoca}: si revoca una \emph{capability} ad un soggetto.
+\end{itemize}
+
+\subsection{ACL}
+L'\textbf{ACL} non è altro che una lista associata ad ogni oggetto in cui sono memorizzati i diritti necessari per
+interagire con quell'oggetto.
+
+Un soggetto per poter interagire presenta i diritti di cui è in possesso e nel caso sia idonei all'interazione con
+l'oggetto l'operazione viene effettuata, in caso contrario la richiesta viene rifiutata.
+
+Un tipico esempio è quello dei router, i quali contengono delle \emph{regole} come ad esempio una lista di IP dai
+quali si possono accettare pacchetti in ingresso e una lista di IP da cui rifiutare qualsiasi pacchetto ricevuto.
+
+\subsection{Controllo degli accessi basato su ruoli}
+Questo tipo di controllo non ragiona in termini di soggetti ma in termini di \textbf{ruoli}, ossia di profili
+professionali diversi come ad esempio in un'azienda in cui abbiamo da un lato l'amministratore delegato e dall'altro
+il dipendente.
+
+La matrice specifica i diritti per i singoli ruoli e non per i singoli utenti andando a risparmiare memoria e
+semplificando la gestione. Il meccanismo prevede una funzione o una tabella che mappa ogni utente con un ruolo e
+relativi diritti.
+
+\subsubsection{SE - Linux}
+Si tratta di una versione di Linux definita da NSA per permettere all'utente di definire una qualunque politica di
+sicurezza come un qualsiasi parametro del sistema operativo configurabile dall'utente. In particolare si possono
+definire
+\begin{itemize}
+	\item I diritti utente sulle risorse.
+	\item I diritti di ogni programma sulle risorse.
+	\item I programmi che ogni utente può eseguire.
+\end{itemize}
+
+\subsection{Firewall}
+Un \textbf{firewall} è un componente che separa due reti di diversa criticità e concentra tutte le linee in ingresso o
+uscita tra le due reti e filtra le comunicazioni per implementare una certa politica di sicurezza.
+
+Possiamo definire un firewall in base a due caratteristiche ortogonali:
+\begin{itemize}
+	\item I protocolli che conosce e che filtra, ossia il tipo di controlli che il firewall implementa.
+	\item La sua implementazione, la quale va a determinare la robustezza del firewall.
+\end{itemize}
+Il firewall determina un punto di centralizzazione delle comunicazioni e quindi un potenziale collo di bottiglia per
+le prestazioni.
+
+\subsubsection{Controlli}
+In firewall per protocolli dello stack TCP/IP i controlli dipendono dal livello dello stack a cui operano.
+
+Un firewall che lavora al livello 3, ovvero il \textbf{livello IP}, opera solo sui bit nell'header del pacchetto e può
+controllare
+\begin{itemize}
+	\item Mittente
+	\item Destinatario
+	\item Porte
+	\item Protocollo usato
+	\item Origine di connessioni di livello 4
+\end{itemize}
+Un firewall che invece lavora al livello 4, ossia il \textbf{livello TCP}, è detto \textbf{circuit level gateway} ed in
+grado di controllare
+\begin{itemize}
+	\item Che la connessione esista
+	\item Il contenuto del pacchetto (\emph{stateful inspection})
+\end{itemize}
+I firewall di \textbf{livello applicativo} sfruttano la conoscenza del protocollo applicativo e possono anche scoprire
+attacchi che sfruttano vulnerabilità di tale protocollo.
+
+\subsubsection{Circuit level gateway}
+Un \textbf{circuit level gateway} fa uso di una tabella delle connessioni per riuscire a validare un pacchetto in
+arrivo. Questo meccanismo serve a riconoscere se il pacchetto in arrivo rappresenta una richiesta di connessione al
+nodo o se si tratta di un pacchetto in transito e che quindi deve solo passare dal nodo.
+\begin{enumerate}
+	\item Quando una connessione TCP viene instaurata viene memorizzata nella tabella.
+	\item Il firewall cerca di determinare, tramite	l'ispezione del pacchetto in arrivo e le sue regole interne, se
+	      esso possa entrare nel nodo o se debba essere rifiutato.
+	\item Esamina la connessione da cui proviene il pacchetto e controlla se questa è presente nella tabella.
+	\item Se è presente allora si tratta di una connessione valida e accetta il pacchetto altrimenti lo scarta.
+	\item Una volta terminata la sessione si elimina anche la connessione dalla tabella.
+\end{enumerate}
+Questo metodo funziona anche con UDP sebbene sia un protocollo \emph{connectionless} è comunque possibile ricostruire
+i circuiti logici.
+
+Un possibile attacco a questo firewall tenta di saturare la tabella delle connessioni. Quando la tabella è satura non è
+possibile eliminare una connessione ancora attiva e si vengono a creare due possibili scenari:
+\begin{itemize}
+	\item \textbf{Default allow}: Il firewall accetta qualsiasi richiesta di connessione.
+	\item \textbf{Default deny}: Il firewall rifiuta qualsiasi richiesta di connessione.
+\end{itemize}
+
+\subsubsection{Proxy e reverse proxy}
+Per \textbf{proxy} si intende un firewall specializzato nel proteggere un client da attacchi esterni. Controlla ad
+esempio che il servizio richiesto ad un determinato server non sia pericoloso per l'integrità del sistema.
+
+Il \textbf{reverse proxy} è invece un firewall specializzato nel proteggere un server da attacchi client. Per esempio
+controlla che le richieste dei client non sia formattate o formulate in modo da apportare danni al server o in modo da
+permettere in qualche modo un'intrusione.
+
+\subsubsection{Stateful firewall}
+Sono firewall che lavorano su tre livelli (IP, TCP e applicativo) e adottano un metodo di filtraggio e controllo
+dinamico dei pacchetti.
+
+Il firewall mantiene una tabella di stati che tiene traccia di tutte le sessioni e le caratteristiche di ogni pacchetto
+che passa dal firewall. Se il pacchetto in arrivo possiede le caratteristiche nella tabella il firewall permette che
+questo passi nel nodo.
+
+\subsubsection{NAT firewall}
+In una rete privata con un certo numero di nodi spesso si utilizza un \textbf{NAT firewall} che ha il compito di
+fornire e gestire pochi indirizzi IP per la comunicazione all'esterno della rete.
+
+In questo modo più nodi possono usare (a turno) lo stesso indirizzo IP globale per parlare all'esterno della rete mentre
+usano un indirizzo locale per comunicare sulla rete interna.
+
+\subsubsection{Egress filtering}
+Un firewall può interrompere una connessione nel momento in cui l'analisi del contenuto rivela che c'è un'intrusione in
+atto.
+
+Con l'\textbf{egress filtering} si fa un controllo non solo delle comunicazioni in ingresso ma anche di quelle in
+uscita. Questo meccanismo è fondamentale per rilevare \emph{botnet} connesse a nodi protetti della rete e per prevenire
+attacchi di tipo DDOS.
+
+\subsubsection{Micro segmentazione}
+Un firewall potrebbe essere usato per difendere un'applicazione invece dell'interno nodo su cui questa gira.
+\begin{itemize}
+	\item Si fanno girare le varie applicazioni su una o più macchine virtuali.
+	\item Si usa una terza macchina virtuale per eseguire un firewall che protegge le altre macchine virtuali.
+\end{itemize}
+Questo tipo di soluzione rappresenta un problema in termini di prestazioni ma un ottimo compromesso rispetto ad
+eseguire ogni applicazione e il firewall su macchine fisiche indipendenti.
+
+Con l'utilizzo di \emph{container} rinunciamo ad un po' di sicurezza ma favoriamo le prestazioni.
+
+\subsection{Honeypot e Honeynet}
+Le \textbf{honeypot} e \textbf{honeynet} sono sistemi o reti la cui funzione è quella di essere attaccati al posto del
+sistema o della rete principale. Le motivazioni principali per l'utilizzo di contromisura sono due:
+\begin{itemize}
+	\item Scoprire come un sistema viene attaccato riuscendo a capire quali sia le vulnerabilità e come queste vengano
+	      sfruttate dall'attaccante.
+	\item Rallentare e scoprire un attaccante deviandolo verso un sistema che non provoca alcun danno.
+\end{itemize}
+
+Le differenze sostanziali tra i due tipi di contromisura sono queste:
+\begin{itemize}
+	\item Quando parliamo di \textbf{honeypot} stiamo facendo riferimento ad un sistema progettato appositamente per
+	      essere attaccato e che comprende meccanismi per ricordare il comportamento dell'attaccante e fermarlo.
+
+	      Il suo principale obbiettivo è quello di rallentare l'attaccante e scoprire come questo opera.
+	\item Quando invece parliamo di \textbf{honeynet} stiamo facendo riferimento ad una rete vera e propria collegata
+	      ad un sistema reale su cui viene usato il software vero e proprio.
+\end{itemize}
+
+\subsubsection{Honeypot}
+Una \textbf{honeypot} può essere classificata con metodi alternativi:
+\begin{itemize}
+	\item Livello di \textbf{interazione}
+	      \begin{itemize}
+		      \item \textbf{Basso}: si tratta di un \emph{port-listener}.
+		      \item \textbf{Medio}: un servizio emulato che analizza le comunicazioni e restituisce risposte simulate
+		            per comportarsi come un servizio reale (\emph{honeyd}).
+		      \item \textbf{Alto}: richiede l'uso di servizi reali e host completamente operativi o reti complete per
+		            ingannare l'attaccante. Sebbene sia migliore per ingannare l'attaccante comporta maggiori rischi
+		            per la sicurezza e dev'essere monitorato e protetto a dovere (\emph{honeynet}).
+	      \end{itemize}
+	\item Livello di \textbf{implementazione}
+	      \begin{itemize}
+		      \item \textbf{Virtuale}: viene simulata una rete tramite macchine virtuali (\emph{honeypot}).
+		      \item \textbf{Fisico}: viene utilizzata una rete fisica (\emph{honeynet})
+	      \end{itemize}
+	\item \textbf{Obbiettivo}
+	      \begin{itemize}
+		      \item \textbf{Produzione}: rallentare l'attaccante.
+		      \item \textbf{Ricerca}: capire modalità d'azione dell'attaccante.
+	      \end{itemize}
+\end{itemize}
+
+\subsubsection{Honeyd}
+Un \textbf{honeyd} è un singolo host che simula reti di grosse dimensioni e permette un alto livello di
+configurabilità.
+
+Un \emph{honeyd} rileva attività non autorizzate monitorando gli indirizzi IP non utilizzati di uno specifico
+intervallo, detto \textbf{dark space}. Ogni connessione verso il \emph{dark space} viene considerata come un possibile
+attacco o comunque come il risultato di una scansione.
+
+Un \emph{honeyd} opera in questo modo
+\begin{enumerate}
+	\item Un \textbf{packet dispatcher} processa i pacchetti in arrivo e controlla indirizzo IP e integrità.
+	\item Accetta solo TCP , UDP e ICMP.
+	\item Interroga file di configurazione alla ricerca del modello associato all'IP di destinazione.
+	\item Se necessario interagisce con applicazioni esterne capaci di gestire il flusso dati.
+	\item Un meccanismo di reindirizzamento gira le richieste ad un sistema reale se necessario.
+	\item Un \textbf{personality engine} elabora un pacchetto di risposta e lo modifica per renderlo compatibile con
+	      lo stack utilizzato dal sistema operativo simulato.
+\end{enumerate}
+
+\section{VPN}
+Si tratta di una rete che emula una connessione sicura sopra una rete pubblica (non sicura). Nella pratica connette
+due sottoreti (protette da firewall) cifrando e autenticando tutto il traffico tra ogni coppia di firewall.
+
+\`E una meccanismo soggetto ad attacchi di tipo DDOS poiché l'unico modo che si ha di scoprire traffico malevolo
+in transito sul canale è decifrando.
+
+\subsection{IPSEC}
+Si tratta di un'estensione di IPv4 che cifra e autentica flussi di informazioni e che offre due possibili protocolli:
+\begin{itemize}
+	\item \textbf{Authentication Mode}: è previsto un \emph{header} di autenticazione nel pacchetto in transito.
+	\item \textbf{Encapsulated Security Payload}: le informazioni nel pacchetto sono cifrate.
+\end{itemize}
+Entrambi i protocolli possono essere usati in due modi:
+\begin{itemize}
+	\item \textbf{Transport Mode}: si inferiscono nuovi campi nel pacchetto originale e dopo lo si invia. \`E
+	      rischioso poiché le informazioni dei nodi terminali come l'indirizzo IP viaggiano in chiaro.
+	\item \textbf{Tunnel Mode}: il pacchetto IP è protetto e diventa il contenuto informativo di un nuovo pacchetto,
+	      nascondendo così le informazioni private degli utenti.
+\end{itemize}
+Ogni connessione è protetta mediante crittografia simmetrica mentre i vari nodi che interagiscono possono essere
+dotati di una coppia chiave pubblica e privata.
+
+In una fase iniziale si adotta un protocollo per lo scambio di chiavi tramite crittografia asimmetrica. Una volta
+stabilita la connessione, questa viene protetta tramite crittografia simmetrica.
+
+Le chiavi simmetriche vengono aggiornate periodicamente:
+\begin{itemize}
+	\item Per limitare l'impatto che avrebbe un attacco in grado di scoprire scoprire la chiave.
+	\item \`E possibile sfruttare il volume di dati trasmessi per condurre attacchi che sfruttano particolari
+	      configurazioni di bit per violare il sistema.
+\end{itemize}
+IPSEC definisce quindi 4 nuovi protocolli:
+\begin{itemize}
+	\item \textbf{Authentication Header}: autentica gli utenti e protegge l'integrità.
+	\item \textbf{Encpsulating Security Payload}: garantisce la confidenzialità proteggendo il contenuto informativo
+	      della comunicazione.
+	\item \textbf{Internet Key Exchange}: due utenti concordano la chiave da usare e per quanto tempo usarla.
+	\item \textbf{Internet Security Association and Key Management Protocol}: protocollo necessario per stabilire e
+	      aggiornare la Security Association e i suoi attributi.
+\end{itemize}
+
+\subsubsection{Security Association}
+Una \textbf{security association} o \textbf{SA} descrive una connessione diretta con i servizi associati al traffico
+che la connessione trasmette. Per assicurare una connessione bidirezionale sono richieste due security association
+(una per ogni direzione).
+
+La SA comprende anche tutte le informazioni per rendere sicura la comunicazione.

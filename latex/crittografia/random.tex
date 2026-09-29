@@ -1,0 +1,419 @@
+\chapter{Sequenze casuali}\label{casualita}
+Introdurre le \textbf{sequenze casuali} ci permette di alimentare gli \textbf{algoritmi randomizzati} e sono inoltre
+molto utili per \textbf{generare le chiavi} di cifratura e decifrazione nel modo migliore possibile.
+
+\begin{example}
+	Prendiamo due sequenze $h_1$ e $h_2$, entrambe lunghe 20 cifre
+	\[
+		\begin{matrix}
+			h_1 = 1 & 1 & 1 & 1 & 1 & \dots & 1 & \dots & 1 \\
+			h_2 = 0 & 1 & 1 & 0 & 0 & \dots & 0 & \dots & 0
+		\end{matrix}
+	\]
+	facciamo finta di aver ottenuto entrambe le sequenze lanciando 20 volte una moneta. La probabilit\`a di ottenere sia
+	$h_1$ che $h_2$ con questo metodo \`e di $\frac{1}{2}^{20}$.
+
+	Se dovessimo indicare quale delle due \`e quella \emph{casuale} sarebbe naturale indicare $h_2$. Ma proviamo a definire
+	formalmente la \textbf{casualit\`a}.
+\end{example}
+
+Il matematico russo Kolmogorov ha descritto il \textbf{significato algoritmico di casualit\`a} per una sequenza binaria.
+
+\begin{definition}[Kolmogorov]
+	Una sequenza \emph{binaria} $h$ \`e \textbf{casuale} se non ammette un algoritmo $A$, in grado di descrivere $h$, la
+	cui rappresentazione binaria sia pi\`u corta di $h$. Quindi $h$ \`e casuale se
+	\[ |h| \leq |A_h| \]
+	Possiamo dunque affermare che una sequenza non \`e casuale se c'\`e un algoritmo \emph{semplice} che la descrive.
+\end{definition}
+
+\begin{example}
+	Prendiamo ora come esempio una sequenza $h$ di $n$ 1. Abbiamo che
+	\[ |h| = n \]
+	e un algoritmo $A_h$ che la descrive
+	\begin{lstlisting}
+	for i = 0 to n-1
+		print(1);
+	\end{lstlisting}
+	La lunghezza della rappresentazione in binario di $A_h$ avr\`a lunghezza
+	\[ |A_h| = \text{cost} + \Theta(\log n) \]
+	dato che per rappresentare $n$ in binario ho bisogno di $\log n$ bit. Abbiamo quindi descritto con $\log n$	bit
+	una sequenza di $n$ bit.
+\end{example}
+
+\begin{example}
+	Considerando invece una sequenza $h$ che ci appare casuale e non presenta evidenti regolarit\`a, l'algoritmo di
+	rappresentazione deve contenerla interamente al suo interno e la restituisce in output.
+	\begin{lstlisting}
+		print(1001011110...1010...);
+	\end{lstlisting}
+	In questo caso la lunghezza della rappresentazione in binario di $A_h$ avr\`a lunghezza
+	\[ |A_h| = \text{cost} + \Theta(n) \]
+	dato che non ho un modo compatto per descrivere $h$.
+\end{example}
+
+\section{Sistemi di calcolo}\label{sistemi_calcolo}
+Iniziamo ora a mettere in relazione le sequenze con i \textbf{sistemi di calcolo} dai quali vengono generate.
+
+Prima di addentrarci nell'argomento facciamo qualche precisazione. I sistemi di calcolo sono certamente \emph{infiniti}
+ma anche \emph{numerabili} dato che devo poterli descrivere con sequenze finite di caratteri di un alfabeto finito.
+
+\begin{definition}[Complessit\`a di Kolmogorov]
+	Sia $h$ una sequenza, $S_i$ un generico sistema di calcolo e $p$ un programma scritto nel formalismo richiesto dal
+	sistema di calcolo $S_i$. Indico con
+	\[ K_{S_i}(h) = \min\{ |p| \mid S_i(p) = h \} \]
+	la \textbf{complessit\`a di Kolmogorov}, ossia la lunghezza del programma pi\`u breve in grado di generare la
+	sequenza $h$ nel sistema $S_i$.
+\end{definition}
+
+\subsection{Sistema di calcolo universale}
+Ci\`o che vogliamo fare \`e rendere la definizione di casualit\`a indipendente dal sistema di calcolo adottato.
+
+Tra i sistemi di calcolo esiste almeno un sistema di calcolo \textbf{universale} $S_u$ in grado di simulare tutti gli
+altri sistemi di calcolo.
+
+Questo sistema di calcolo prende in input una coppia $q$, formata da un indice $i$ (l'indice del sistema di calcolo da
+simulare) e un programma $p$, da far girare sul sistema di calcolo $S_i$.
+\[ S_u(q) =  S_u (\langle i, p \rangle) = S_i (p) = h \]
+Se andiamo a valutare la lunghezza di $q$ in bit otteniamo che
+\[ |q| = |i| + |p| = \Theta (\log i) + |p| \]
+dato che per rappresentare $i$ ho bisogno di $\log i$ bit. Notiamo anche che $|i|$ dipende unicamente dal sistema di
+calcolo e non dalla sequenza $h$.
+
+Proviamo ora a valutare la complessit\`a di Kolmogorov su $S_u$. Possiamo dire certamente che
+\[ K_{S_u}(h) \leq K_{S_i}(h) + c_i \]
+dove $c_i$ \`e una costante che non dipende da $h$.
+
+\begin{definition}
+	La \textbf{complessit\`a} secondo Kolmogorov di una sequenza $h$ \`e
+	\[ K(h) = K_{S_u}(h) \]
+	infatti
+	\[ \forall S_i \quad K_{S_i}(h) \geq K_{S_u}(h) \]
+	a meno di una costante.
+\end{definition}
+
+\begin{definition}[Casualit\`a secondo Kolmogorov]
+	Una sequenza $h$ \`e \textbf{casuale} se
+	\[ K(h) \geq |h| - \lceil \log |h| \rceil \]
+	La ragione per cui si sottrae un fattore logaritmico \`e per rilassare il vincolo di casualit\`a, altrimenti
+	soddisfatto da ben poche sequenze.
+\end{definition}
+
+Notiamo che la casualit\`a \`e una \emph{propriet\`a} della sequenza, e non dipende quindi dal sistema di calcolo
+che l'ha generata.
+
+\section{Esistenza}\label{esistenza_casualita}
+Dimostriamo adesso l'\textbf{esistenza} di sequenze casuali secondo la teoria appena descritta.
+
+\begin{proof}
+	Consideriamo solo sequenze binarie lunghe $n$ bit e indichiamo con $S$ il numero di sequenze binarie lunghe $n$.
+	\[ S = 2^n \]
+	Indichiamo inoltre con $T$ il numero di sequenze binarie lunghe $n$ \textbf{non casuali} secondo la definizione data
+	in precedenza.
+
+	Per dimostrare l'esistenza di sequenze casuali, dobbiamo dimostrare che
+	\[ T < S\]
+	ovvero che l'insieme $S$ non \`e composto esclusivamente da sequenze non casuali. Di conseguenza, le sequenze in
+	$S$, che non sono in $T$ devono essere necessariamente casuali.
+
+	Iniziamo con il ricordare una caratteristica detta in precedenza sulle sequenze in $T$ e quindi non casuali. I
+	programmi che generano sequenze lunghe $n$ in $T$ hanno lunghezza
+	\[ |p| < n - \lceil \log n \rceil \]
+	perch\'e se la lunghezza \`e almeno $n - \lceil \log n \rceil$ allora la sequenza \`e casuale.
+
+	Indichiamo con $N$ il numero di sequenze binarie $h$ tali che
+	\[ |h| < n - \lceil \log n \rceil \]
+	Tra queste ci saranno anche le sequenze che codificano i programmi che generano le $T$ sequenze non casuali. Possiamo
+	ora definire $N$ come segue
+	\[ N = \sum_{i=0}^{n - \lceil \log n \rceil - 1} 2^i = 2^{n - \lceil \log n \rceil} - 1 \]
+	Se mettiamo a confronto $N$ con $S$ notiamo subito che
+	\[ N < S \]
+	ma abbiamo che in $N$ ci sono tutti i programmi che generano le $T$ sequenze non casuali, quindi
+	\[ T \leq N < S \quad \Rightarrow \quad T < S \]
+\end{proof}
+
+Possiamo fare un'altra considerazione: se sviluppiamo il seguente limite
+\[ \lim_{n \rightarrow +\infty} \frac{T}{S} \]
+otteniamo
+\[
+	\lim_{n \rightarrow +\infty} \frac{2^{n - \lceil \log n \rceil} - 1}{2^n} =
+	\lim_{n \rightarrow +\infty} \left( \frac{1}{2^{\lceil \log n \rceil}} - \frac{1}{2^n}\right) = 0
+\]
+Questo ci dice che al crescere di $n$ le sequenze non casuali sono molte meno di quelle casuali.
+
+Fatta questa considerazione ci potrebbe venire in mente di prendere una sequenza qualsiasi lunga $n$ e vedere se \`e
+casuale. Purtroppo non esiste un algoritmo che, data una sequenza arbitraria, sia in grado di dirci se questa sia
+casuale o meno secondo Kolmogorov.
+
+\begin{theorem}
+	Il problema di stabilire se una sequenza sia casuale secondo Kolmogorov \`e indecidibile.
+	\begin{proof}
+		Procediamo con una dimostrazione per assurdo. Ipotizziamo che esista un algoritmo \verb|RANDOM| in grado di
+		dire se $h$ sia casuale o meno.
+		\begin{lstlisting}
+			RANDOM(h)
+				return h.isRandom();
+		\end{lstlisting}
+		Costruiamo a questo punto l'algoritmo \verb|PARADOSSO| che enumera tutte le sequenze di lunghezza $h$, chiama
+		\verb|RANDOM| su ognuna di esse	e infine restituisce la prima sequenza casuale $h$ tale che
+		\[ |h| - \lceil \log |h| \rceil > 1 \]
+		\begin{lstlisting}
+			PARADOSSO()
+				for h = 1 to +inf
+					if |h| - ceil(log(|h|)) > |P| and RANDOM(h) then
+						return h;
+		\end{lstlisting}
+		\verb|P| \`e una stringa che rappresenta la codifica in binario di \verb|PARADOSSO| e di \verb|RANDOM|, vale
+		quindi che
+		\begin{center}
+			|\verb|P|| \verb|=| |\verb|PARADOSSO|| \verb|+| |\verb|RANDOM||
+		\end{center}
+		e |\verb|P|| \`e una costante che non dipende da $h$. Questo perch\'e $h$ compare in \verb|PARADOSSO| solo come
+		nome di variabile.
+
+		\begin{enumerate}
+			\item La prima condizione \`e vera quando incontro una sequenza $h$ tale che
+			      \[ |h| - \lceil \log |h| \rceil > |\text{P}| \]
+			      ma \verb|P| \`e un programma \textbf{breve} che \emph{genera} $h$, quindi
+			      \[ |P| < |h| - \lceil \log |h| \rceil \]
+			      ma questo equivale a dire che $h$ non \`e casuale secondo Kolmogorov.
+			\item La seconda condizione \`e vera quando \verb|RANDOM| trova una sequenza casuale e, come detto in
+			      precedenza, le sequenze casuali esistono e quindi prima o poi \verb|RANDOM| ne trover\`a una.
+		\end{enumerate}
+		Ecco che qui si ottiene una contraddizione dato che il programma termina su una sequenza che viene riconosciuta
+		allo stesso tempo come casuale e come non casuale.
+	\end{proof}
+\end{theorem}
+
+\section{Sorgente casuale binaria}\label{sorgente_binaria}
+Iniziamo ora a parlare di come queste sequenze casuali vengono generate.
+
+\begin{definition}
+	Una \textbf{sorgente casuale binaria} produce un flusso di bit con due propriet\`a fondamentali:
+	\begin{itemize}
+		\item Lo 0 e l'1 si presentano con uguale probabilit\`a
+		      \[ \begin{matrix} P(0) & = & P(1) & = & \displaystyle\frac{1}{2} \end{matrix} \]
+		      quest'ipotesi, in realt\`a, non \`e cos\`i rigida. Non \`e necessario che le due probabilit\`a siano
+		      uguali, basta che
+		      \[ P(0) > 0 \quad \wedge \quad P(1) > 0 \]
+		      ma devono essere \textbf{immutabili} durante il processo. Quello che si fa per far comparire gli 0
+		      gli 1 con uguale frequenza \`e generare la sequenza con probabilit\`a $P(0)$ e $P(1)$ diverse fra loro.
+		      Per esempio prendiamo questa sequenza la cui sorgente ha $P(1) > P(0)$
+		      \[ \begin{matrix} 0 & 0 & 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 \end{matrix} \]
+		      a questo punto prendiamo in considerazione le coppie di bit generate
+		      \[ \begin{matrix} 00 & 10 & 01 & 11 & 11 \end{matrix} \]
+		      eliminiamo le coppie in cui i bit sono uguali e valutiamo come 0 le coppie 01 e come 1 le coppie 10,
+		      otteniamo cos\`i la sequenza
+		      \[ \begin{matrix} 1 & 0 \end{matrix} \]
+		      Eliminiamo le coppie in cui i bit sono uguali perch\'e le coppie 11 appaiono con maggiore probabilit\`a
+		      e le coppie 00 con minor probabilit\`a. Al contrario le coppie 01 e le coppie 10 sono equiprobabili.
+		\item La generazione di un bit \`e indipendente da quella dei bit precedenti. Questa ipotesi \`e molto pi\`u
+		      stringente della precedente e non \`e chiaro se sia davvero possibile soddisfarla.
+	\end{itemize}
+\end{definition}
+
+\subsection{Generatori pseudocasuali}
+Dato che riuscire a generare numeri casuali cercando di soddisfare la seconda ipotesi descritta al paragrafo
+\ref{sorgente_binaria} \`e molto complesso, quello che si fa nella pratica \`e utilizzare
+\textbf{generatori pseudocasuali}, ossia generatori che generano casualit\`a mediante un algoritmo, ricercandola
+all'interno di processi matematici.
+
+Questi generatori sono definiti \emph{pseudocasuali} perch\'e, in genere, sono programmi brevi e che quindi generano
+sequenze non casuali secondo Kolmogorov.
+
+Un altro motivo \`e che il numero di sequenze possibili, dipende da un parametro di input ossia il \textbf{seme}. Le
+possibili sequenze generate sono funzione della lunghezza del seme e sono molte meno di quelle generabili in realt\`a.
+
+Il problema di questi generatori \`e che producono un flusso di bit che ad un certo punto si ripete. Questo avviene
+perch\'e, quando in modo casuale, il seme iniziale viene rigenerato, la sequenza riparte da capo. La sequenza che
+viene ripetuta all'interno del flusso \`e detta \textbf{periodo}.
+
+Il seme lo otteniamo con un procedimento casuale (per esempio prendendo lo stato interno dell'orologio del calcolatore)
+e il periodo lo otteniamo in modo deterministico a partire dal seme.
+
+Possiamo pensare infine al generatore pseudocasuale come ad un \emph{amplificatore} di casualit\`a, dato che cerca di
+rendere il periodo pi\`u lungo possibile.
+
+Un generatore \`e tanto migliore quanto pi\`u lungo \`e il periodo che riesce a generare.
+
+Precisiamo che, essendo deterministico, il generatore ha sempre bisogno di un seme diverso per generare una sequenza
+diversa. Se forniamo sempre il solito seme otteniamo sempre la solita sequenza.
+
+Supponiamo di partire da un seme $S$ di $s$ bit. Il generatore genera al pi\`u $2^s$ sequenze diverse lunghe quanto il
+periodo del generatore.
+
+\subsubsection{Generatore lineare}
+\`E un generatore molto semplice che sfrutta, per la generazione del flusso di bit, la funzione
+\[ x_i = (a \cdot x_{i - 1} + b) \mod{m} \]
+dove i parametri $a$, $b$ ed $m$ sono interi positivi.
+
+Questo generatore ha periodo minore di $m$, dato che, lavorando modulo $m$, possiamo ottenere al massimo $m$ sequenze
+diverse. Nella pratica, i parametri $a$ e $b$, si scelgono appositamente per riuscire a far s\`i che il periodo sia
+esattamente uguale ad $m$ e non minore.
+
+Se i parametri sono scelti bene il generatore produce una permutazione degli interi da 0 a $m - 1$. Affinch\'e questo
+avvenga, $a$, $b$ ed $m$, devono soddisfare alcune propriet\`a:
+\begin{itemize}
+	\item I parametri $b$ ed $m$ devono essere coprimi
+	      \[ (b, m) = 1 \]
+	\item Il parametro $a - 1$ deve essere divisibile per ogni fattore primo di $m$.
+	\item Se $m$ \`e un multiplo di 4 allora anche $a-1$ deve esserlo
+	      \[ 4 \mid m \quad \Rightarrow \quad 4 \mid a - 1 \]
+\end{itemize}
+Come possiamo vedere questo generatore non possiede la seconda propriet\`a fondamentale, dato che la generazione di un
+numero \`e fortemente influenzata dalla generazione del precedente.
+
+Per ora abbiamo usato il generatore per la generazione di numeri interi ma se volessimo generare sequenze binarie
+basta calcolare
+\[ x_i / m \]
+e prendere la \textbf{parit\`a} della prima cifra decimale.
+
+\subsubsection{Generatore polinomiale}
+Il primo metodo per riuscire a \emph{generalizzare} un po' il generatore lineare, \`e aumentare il grado del polinomio.
+Riscriviamo quindi la funzione precedente ma con un polinomio di grado $t$
+\[ x_i = (a_1 x_{i-1}^t + a_2 x_{i-1}^{t-1} + \dots + a_t x_{i-1} + a_{t+1}) \mod{m} \]
+Per quanto si possa aumentare il grado del polinomio, questo generatore non \`e tanto migliore del generatore lineare.
+
+Anche per questo dobbiamo scegliere bene i parametri per rendere il periodo pi\`u lungo possibile (sempre uguale a $m$).
+Una scelta di parametri molto comune \`e questa:
+\[
+	\begin{matrix}
+		a & = & \pi    \\
+		b & = & e      \\
+		m & = & 2^{32}
+	\end{matrix}
+\]
+
+\subsection{Test statistici}
+Nel caso in cui volessimo costruire il nostro generatore personale, per riuscire a capire quanto sia effettivamente
+valido o ben costruito, dobbiamo sottoporlo ad alcuni \textbf{test statistici}:
+\begin{itemize}
+	\item \textbf{Test di frequenza}: si verifica che i diversi simboli della sequenza appaiano con pari probabilit\`a.
+	\item \textbf{Poker test}: si controlla che le sottosequenze della stessa lunghezza siano equiprobabili.
+	\item \textbf{Test di autocorrelazione}: si verifica che, a distanze fissate, non appaia sempre lo stesso simbolo.
+	\item \textbf{Run test}: la frequenza di sottosequenze composte interamente dallo stesso simbolo cali in modo
+	      esponenziale, relativamente alla loro lunghezza.
+\end{itemize}
+Ovviamente, per effettuare un buon test, la sequenza deve essere sufficientemente lunga da permettere un'analisi
+esauriente.
+
+Sia il generatore lineare che quello polinomiale superano questi test ma non vanno comunque bene per la generazione di
+chiavi crittografiche. Anche tenendo nascosti i parametri, esistono algoritmi di costo polinomiale che sono in grado di
+stimare, con una probabilit\`a significativamente maggiore di $1/2$, quale sar\`a il prossimo bit generato.
+
+\subsubsection{Test di prossimo bit}
+Per le applicazioni crittografiche si richiede un test in pi\`u, il \textbf{test di prossimo bit}.
+
+Un generatore binario supera il test di prossimo bit se non esiste un algoritmo polinomiale in grado di prevedere il
+prossimo bit generato a partire dalla conoscenza dei bit gi\`a generati con probabilit\`a strettamente maggiore di $1/2$.
+
+Se un generatore supera questo test, supera anche tutti gli altri test statistici ed \`e detto
+\textbf{crittograficamente sicuro}.
+
+\subsection{Generatori crittograficamente sicuri}
+La costruzione di generatori sicuri si basa sulle cosiddette funzioni \textbf{one-way}, ossia funzioni \emph{facili} da
+calcolare ma \emph{difficili} da invertire.
+\begin{itemize}
+	\item $y = f(x)$ si calcola in tempo polinomiale.
+	\item $x = f^{-1}(y)$ si calcola in tempo esponenziale.
+\end{itemize}
+Per generare la sequenza si parte da un seme $x_0$ (mantenuto segreto) e si calcola in tempo polinomiale la sequenza
+\[
+	\begin{matrix}
+		x_1   & = f(x_0)     &             &                \\
+		x_2   & = f(x_1)     & = f(f(x_0)) & = f^{(2)}(x_0) \\
+		\dots &              & \dots       &                \\
+		x_i   & = f(x_{i-1}) & \dots       & = f^{(i)}(x_0) \\
+		\dots &              & \dots       &
+	\end{matrix}
+\]
+Affich\'e la sequenza non venga scoperta deve essere consumata al contrario. Questo perch\'e si deve sempre assumere
+che il crittoanalista conosca $f$. Conoscendo $f$ e vedendo un generico $x_i$ \`e facile calcolare $f(x_{i+1})$.
+
+Se invece consumiamo la sequenza al contrario, l'unico modo per il crittoanalista di prevedere il prossimo bit generato
+\`e quello di invertire $f$, ma come abbiamo gi\`a detto, \`e un'operazione che richiede tempo esponenziale.
+
+\subsubsection{Predicati hard-core delle funzioni one-way}
+Per rendere il generatore appena descritto, un generatore \emph{binario}, che per\`o conservi le propriet\`a che lo
+rendono crittograficamente sicuro, si fa ricorso ai \textbf{predicati hard-core} per le funzioni one-way.
+\begin{definition}
+	Chiamo $b(x)$ \textbf{predicato hard-core} di $f$ se
+	\begin{itemize}
+		\item \`e facile da calcolare conoscendo $x$.
+		\item \`e difficile da prevedere con probabilit\`a maggiore di $1/2$ se si conosce $f(x)$.
+	\end{itemize}
+\end{definition}
+
+\begin{example}
+	Prendiamo $f$ definita come segue
+	\[ f(x) = x^2 \mod{m} \]
+	dove $m$ \`e un numero composto e prendiamo $b$, definito come la parit\`a di un numero $x$ in input. Poniamo
+	$m = 77$ e $x = 10$, otteniamo
+	\[ f(10) = 10^2 \mod{77} = 23 \]
+	Arrivati a questo punto, se si conosce $x$ \`e immediato calcolarne la parit\`a ma per chi non lo conosce ed \`e
+	in possesso solo di 23 e di $f$, le cose si complicano notevolmente. Si dovrebbe cercare quel numero $x$, che,
+	elevato al quadrato modulo 77, faccia 23 e infine calcolarne la parit\`a. Questo procedimento per\`o non si pu\`o
+	effettuare se non in tempo esponenziale, facendo una ricerca esaustiva e provando tutti i possibili valori da 0 a
+	$m-1$.
+\end{example}
+
+\subsubsection{Generatore BBS}
+Ideato da Blum, Blum e Shub nell'1986 funziona in questo modo ed \`e tra i generatori classificati sicuri. Consideriamo
+\[ n = p \cdot q \]
+con $p$ e $q$ che devono soddisfare alcuni requisiti per garantire la difficolt\`a nella fattorizzazione:
+\begin{itemize}
+	\item Devono essere numeri primi grandi.
+	\item $p \mod{4} = 3$
+	\item $q \mod{4} = 3$
+	\item $2 \lfloor p / 4 \rfloor + 1$ e $2 \lfloor q / 4 \rfloor + 1$ devono essere coprimi.
+\end{itemize}
+A questo punto scegliamo un numero $y$, coprimo con $n$ e calcoliamo
+\[ x_0 = y^2 \mod{n} \]
+ottenendo cos\`i il seme $x_0$. Generiamo ora una successione di $m \leq n$ interi, calcolando ogni elemento come segue
+\[ x_i = (x_{i-1})^2 \mod{n} \]
+Per rendere la sequenza binaria prendiamo come predicato la parit\`a:
+\[ b_i = 1 \quad \Leftrightarrow \quad x_{m-i} \text{ \`e dispari} \]
+
+\begin{example}
+	Prendiamo $p = 11$ e $q = 19$ e verifichiamo che siano soddisfatte le propriet\`a. La prima propriet\`a, per questo
+	esempio non la consideriamo, dato che non \`e necessaria ai fini del funzionamento del generatore ma solo a fini di
+	sicurezza crittografica.
+	\begin{itemize}
+		\item $11 \mod{4} = 3$
+		\item $19 \mod{4} = 3$
+		\item Calcoliamoci i due valori e vediamo se sono coprimi fra loro
+		      \begin{gather*}
+			      2 \lfloor 11 / 4 \rfloor + 1 = 7 \\
+			      2 \lfloor 19 / 4 \rfloor + 1 = 9
+		      \end{gather*}
+		      7 e 9 sono coprimi quindi tutte le propriet\`a sono soddisfatte.
+	\end{itemize}
+	Con $p = 11$ e $q = 19$ abbiamo che $n = 209$
+	Prendiamo ora un $y$ coprimo con $n$, diciamo $y = 30$
+	e calcoliamo il seme $x_0$ come segue
+	\[ x_0 = 30^2 \mod{209} = 64 \]
+	Da qui possiamo iniziare a generare la nostra sequenza
+	\[ \begin{matrix} x_0 = 64 & x_1 = 125 & x_2 = 159 & x_3 = 201 \end{matrix} \]
+	Usiamo infine la parit\`a per ottenere la sequenza binaria
+	\[ \begin{matrix} 0 & 1 & 1 & 1 \end{matrix} \]
+\end{example}
+
+\subsection{Generatori basati su cifrari simmetrici}
+Il funzionamento di generatori di questo tipo si basa sui seguenti parametri:
+\begin{itemize}
+	\item Un cifrario simmetrico (DES, AES, ecc).
+	\item $r$: numero di bit delle parole prodotte.
+	\item $s$: seme casuale di $r$ bit.
+	\item $m$: numero di parole di $r$ bit.
+	\item $k$: chiave segreta del cifrario.
+\end{itemize}
+Di seguito quello che potrebbe essere un generatore basato su cifrari simmetrici:
+\begin{lstlisting}
+	Generatore(s, m)
+		d = time(); // in r bit 
+		y = C(d, k); // C = funzione di cifratura 
+		z = s;
+		for i = 1 to n
+			x_i = C(y ^ z, k); // ^ = xor bit a bit
+			z = C(y ^ x_i, k);
+			output(x_i); // comunico x_i all'esterno
+\end{lstlisting}

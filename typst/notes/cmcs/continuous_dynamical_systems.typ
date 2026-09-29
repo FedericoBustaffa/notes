@@ -1,0 +1,327 @@
+#import "@local/note_template:0.1.0": *
+#show: doc => note_template([Continuous Dynamical Systems], doc)
+
+#title()
+
+Some system can naturally be described with discrete time steps, but in many
+cases the precision of those models is too low. In order to provide more
+accurate simulations it’s necessary a continuous representation of time.
+
+In other words, the time step $Delta t$ must tend to zero and a representation
+through *ordinary differential equations (ODEs)* must be introduced.
+
+= Recurrence to ODE
+
+The first method can be used when in the recurrence relation there is $Delta t$
+term and the goal is to obtain an equation in this form
+
+$ frac(N (t + Delta t) - N (t), Delta t) = f (N (t)) $
+
+compute the limit for $Delta t arrow.r 0$ that gives us the *difference
+quotient*
+
+$
+  lim_(Delta t arrow.r 0) frac(N (t + Delta t) - N (t), Delta t) =
+  lim_(Delta t arrow.r 0) f (N (t))
+$
+
+that can be rewritten as
+
+$ dot(N) (t) = f (N (t)) $
+
+that is a differential equation. Computing the *solution* of this ODE gives us
+an equation that can be used to compute the value of a generic state variable
+$N$ at a given time $t$.
+
+#note[
+  The solution of the ODE is different from the solution of the recurrence
+  relation because we moved parts of the recurrence to the left end side, so the
+  behavior of the state variable can differ.
+]
+
+The other case is when we don’t have $Delta t$ in the recurrence and we _"copy"_
+the form of the recurrence as a differential equation. The $N_(t + 1)$ part
+becomes the derivative $dot(N) (t)$ and the right end side remains the same but
+with $N_t$ that becomes $N (t)$.
+
+The main difference between the two is that a recurrence relation uses the
+current state to compute the next one, meanwhile the differential equation at
+time $t$ let us compute the *change*. In other words the value of the derivative
+at time $t$ tells us how the state variable behaves in that moment: how much it
+grows, decreases or remain constant.
+
+== Linear Birth Model
+
+Let's take as example the linear birth model in its discrete form
+
+$ N(t + Delta t) = N(t) + lambda (Delta t) / sigma N(t) $
+
+and translate it in the continuous form by trying to obtain the _difference
+quotient_:
+
+$ (N(t + Delta t) - N(t)) / (Delta t) = lambda / sigma N(t) $
+
+if we now convert $lambda / sigma$ in $r_c$, the continuous *birth rate*, we can
+write
+
+$
+  lim_(Delta t arrow 0) (N(t + Delta t) - N(t)) / (Delta t) =
+  lim_(Delta t arrow 0) r_c N(t)
+$
+
+since the left side is the derivative of $N(t)$ and the right side does not
+depend on $Delta t$ we can write
+
+$ dot(N) (t) = r_c N(t) $
+
+which is an ODE that relates $N(t)$ to its derivative. To work with it we have
+to find a *solution* (or a *closed form definition*):
+
+$ (dot(N) (t)) / N(t) = r_c $
+
+knowing that
+
+$
+  (dot(N) (t)) / N(t) = (d ln N(t)) / (d t) quad "and" quad
+  r_c = (d r_c t + c) / (d t)
+$
+
+so we can write
+
+$ ln N(t) = r_c t + c $
+
+that brings to
+
+$ N(t) = C e^(r_c t) $
+
+with $C = e^c$, that typically is $N(0)$.
+
+#figure(
+  lq.diagram(
+    title: [ $r_c = 2$, $C = N_0 = 1$ ],
+    xlabel: [ Time ],
+    ylabel: [ Individuals ],
+    width: 60%,
+    height: 5cm,
+    {
+      let x = lq.linspace(0, 4)
+      lq.plot(x, x => calc.exp(2 * x), mark: none)
+    },
+  ),
+  caption: [ Linear Birth ],
+)
+
+Qualitatively we obtained the same behavior of the discrete version of the same
+model (*exponential growth*), but what changes is the role of the growth rate:
+in the discrete version we have
+
+$
+  N_(t+1) & = r_d N_t   &   "recurrence" \
+      N_t & = r_c^t N_0 & "general term"
+$
+
+so the population grows if $r_d > 1$. While for the continuous version we have
+
+$
+  dot(N) (t) & = r_c N(t)    &      "ODE" \
+        N(t) & = C e^(r_c t) & "solution"
+$
+
+in which the population grows if $r_c > 0$. Let's also notice that in the
+continuous version the growth rate is part of the exponent, in fact for the same
+rate there is a much faster growth.
+
+#note(title: "Recurrence vs ODE")[
+  An important observation to make is that recurrence relations describe how to
+  compute the *next state*, differential equations instead describe how to
+  compute the difference between the current and the next.
+]
+
+== Equilibrium <equilibrium>
+
+For recurrence relations we want to know when the next state is equal to the
+current; in other words we want to find when the system does not change anymore.
+
+To find the *equilibrium* point in continuous models we can instead set the
+derivative to $0$ in order to compute the local minimum (or maximum) of the
+function.
+
+=== Resource Consumer Model
+
+Let's consider the *resource consumer* model, described by the logistic
+equation as follows:
+
+$ dot(N) (t) = r_c N(t) (1 - N(t) / K) $
+
+with $r_c$ and $K$ that are respectively _growth rate_ and _carrying capacity_.
+The solution of this ODE is
+
+$ N(t) = K / (1 + (K / N(0) - 1) e^(-r_c t)) $
+
+which tells us that $N(t)$ tends to $K$, since $e^(-r_c t)$ tends to $0$, and so
+the population converges to the carrying capacity of the environment.
+
+// #figure(
+//   {
+//     cetz.canvas({
+//       import plot: *
+//
+//       let logistic(t, N0, r, K) = { K / (1 + (K / N0 - 1) * calc.exp(-r * t)) }
+//
+//       plot(
+//         size: (6, 4),
+//         x-label: "Time",
+//         y-label: "Individuals",
+//         x-tick-step: 1,
+//         y-tick-step: 10,
+//         axis-style: "scientific",
+//         x-grid: true,
+//         y-grid: true,
+//         // legend: "inner-south-east",
+//         {
+//           for n in (10, 20, 45) {
+//             add(domain: (0, 4), samples: 30, label: [$N_0 = #n$], x => logistic(
+//               x,
+//               n,
+//               2,
+//               30,
+//             ))
+//           }
+//         },
+//       )
+//     })
+//   },
+//   caption: [ Resource Consumer with $r_d = 2$ and $K = 30$ ],
+// )
+
+= Numerical Solutions <numerical-solutions>
+
+A simpler and faster way to compute solutions for ODEs is by using *numerical
+methods* that try to solve the so called *initial value problem*. The initial
+value problem is solved by computing a function $F (t)$ that is a solution of
+the ODE
+
+$ dot(N) (t) = f (N (t)) $
+
+and such that $F (0) = N_0$. Usually we are interested in values of $F (t)$ for
+$t gt.eq 0$ since we want to perform a simulation starting from $t = 0$.
+
+== Euler Method <euler-method>
+
+The *Euler’s method* is the simplest numerical method to numerically solve an
+ODE, by approximating the actual function with the derivative.
+
+Let
+
+$ dot(N) (t) = f (N (t)) $
+
+be the ODE we want to solve and suppose to know $N (t_0 = 0)$ ($t_0$ can
+also be different from $0$) the starting point, and let $tau$ be the step size.
+
+#figure(
+  image("images/euler.png", width: 70%),
+  caption: [ Euler Method: Linear Birth ],
+)
+
+The method starts by computing $dot(N) (t_0)$ and obtain the tangent’s angular
+coefficient of the function $N$ in $t_0$. Now we can compute an approximation of
+$N (t_0 + tau)$ using the tangent instead of the actual function $N$ (that we
+don’t know). The idea is that, for a small step $tau$, the tangent is a good
+approximation of the function.
+
+So if we know the angular coefficient, the starting point, and the step
+we can use the following formula
+
+$
+  y - y_0 & = m (x - x_0) \
+        y & = y_0 + m (x - x_0) \
+        y & = y_0 + m (x_0 + tau - x_0) \
+        y & = y_0 + tau m
+$
+
+if we now consider that $m$ is the value of the derivative in
+$x_0 = t_0$ we can say that
+
+$ m = dot(N) (t_0) = f (N (t_0)) $
+
+And so we can easily obtain the following recurrence relation
+
+$ N_(k + 1) = N_k + tau f (N_k) $
+
+that describes how to compute the next step and where $N_k$ approximate
+$N (k tau)$.
+
+=== Approximation Errors <approximation-errors>
+
+The two types of error we care about when run numerical simulations are:
+
+- *Local discretization error*: error raised at every step of the algorithm,
+  that has the value of $ lr(|N (tau) - N_1|) $ and is in the order of
+  $O (tau^2)$ (derived by the Taylor's series).
+- *Global discretization error*: the error accumulates and after $k$ steps we
+  have an error of $ lr(|N (k tau) - N_k|) $ and it is in the order of
+  $O (tau)$.
+
+A linear global discretization error means that a very small $tau$ has to be
+used in order to minimize the error; this also can imply a much slower
+simulation because smaller $tau$ means more iterations.
+
+=== Implicit Methods <implicit-methods>
+
+In some cases the method can become unstable unless a very small $tau$ is used.
+This systems are called *stiff systems* and often *implicit methods* are better
+for those cases.
+
+An implicit method simply compute the derivative at the end of the time interval
+of length $tau$, so now the formula is slightly different:
+
+$ N_(k + 1) = N_k + tau f (N_(k + 1)) $
+
+where $N_k$ approximates $N (k tau)$.
+
+With stiff systems this kind of methods are often more efficient and greater
+values of $tau$ can be used. However we have to pay a more heavy computation
+step but it is often more convenient than use the explicit version of the
+method.
+
+#figure(
+  image("images/euler2.png", width: 75%),
+  caption: [ Implicit Euler Method ],
+)
+
+The fact that $N_(k + 1)$ appears on both sides means that we need to solve an
+equation like
+
+$ g (N_(k + 1)) := N_(k + 1) - tau f (N_(k + 1)) - N_k = 0 $
+
+that in general is not linear and can be solved numerically.
+
+#example(title: "Example")[
+  Let’s take, for example the classic consumer resource model
+
+  $ dot(N) (t) = r_c N (t) (1 - frac(N (t), K)) $
+
+  if we compute the implicit step of the Euler method we have
+
+  $ N_(k + 1) = N_k + tau r_c N_(k + 1) (1 - N_(k + 1) / K) $
+
+  that can be rewritten as
+
+  $ frac(tau r_c, K) N_(k + 1)^2 + (tau r_c - 1) N_(k + 1) - N_k = 0 $
+
+  since the only unknown value is $N_(k + 1)$ is clear that this is a quadratic
+  equation that can be solved numerically.
+]
+
+for some simple model like the linear birth model an analytical way is still
+possible but in general this is not true.
+
+= Limitations <limitations>
+
+Possible limitations for continuous dynamical models based on ODEs are that they
+describe the behavior of the system, starting from an initial state in a
+*deterministic* way.
+
+Often can happen that the same system exhibit different behaviors starting from
+the same initial state. This happens when some events in the system are somehow
+*random*. This introduce the need for *probabilistic or stochastic models*.

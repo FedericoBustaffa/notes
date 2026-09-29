@@ -1,0 +1,172 @@
+\section{Server}
+Il server, implementato dalla classe \verb|Server|, dopo l'avvio si occupa di leggere il file json
+di configurazione che viene passato come parametro da riga di comando e di inizializzare le
+strutture necessarie per la connessione da parte dei client. Le operazioni principali svolte dal
+server in fase di avvio sono:
+\begin{enumerate}
+	\item Ripristinare la lista degli utenti tramite il file \verb|users.json|.
+	\item Tramite tale lista creare una classifica degli utenti in ordine di punteggio decresente.
+	\item Creare un'istanza di un oggetto \verb|Wordle| che si occupa di gestire le interazioni
+	      dell'utente prettamente relative al gioco.
+	\item Creare un thread \emph{estrattore} che si occupa di estrarre una parola dal vocabolario
+	      ogni volta che scade un timeout.
+	\item Pubblicare un oggetto remoto di tipo \verb|RegistrationService|, accessibile tramite RMI,
+	      per permettere ai client di effettuare l'operazione di registrazione.
+	\item Inizializzare un server TCP tramite facente uso di canali non bloccanti (\verb|Selector|
+	      e \verb|Channel|).
+	\item Inizializzazione di un socket multicast per l'invio di messaggi sul gruppo sociale.
+\end{enumerate}
+
+\subsection{Strutture dati}
+Dato che il server potrebbe avviare più thread in contemporanea, sono necessarie strutture dati che
+garantiscano che ogni thread acceda in modo esclusivo alla struttura.
+
+\subsubsection{Utenti}
+Prima fra tutti è la \verb|ConcurrentHashMap|, le cui chiavi sono gli \verb|username| degli utenti
+(poiché univoci per ogni utente) e il valore associato ad ognuna delle chiavi è l'istanza della
+classe \verb|User| relativa a quello \verb|username|.
+
+\subsubsection{Classifica}
+La seconda struttura dati è la classifica degli utenti, ordinata in ordine decrescente in base al
+loro punteggio e implementata tramite una \verb|LinkedList| sincronizzata.
+
+\subsection{Wordle}
+Il server mantiene un'istanza della classe \verb|Wordle| la quale contiene strutture dati e metodi
+fondamentali per la corretta interazione tra utente e server quando si compiono azioni prettamente
+di gioco.
+
+In particolare si occupa di gestire le sessioni di gioco nel modo corretto e qualora un utente
+faccia dei tentativi per indovinare la parole segreta, si occupa di verificare se il tentativo è
+corretto o, in caso contrario, di fornire i suggerimenti all'utente.
+
+Tutto questo è affiancato da un thread \emph{estrattore}, implementato dalla stessa classe
+\verb|Wordle|, il quale si occupa di estrarre una nuova parola casuale ogni qual volta scade il
+timeout.
+
+\subsubsection{Sessioni}
+L'altra struttura dati utilizzata è una \verb|ConcurrentHashMap| che mette in correlazione un
+utente con una \verb|Session|. Una \verb|Session| incapsula la parola che l'utente sta cercando di
+indovinare, il numero di tentativi che questo ha fatto per indovinarla e altre informzioni relative
+allo stato della sessione (chiusa/aperta oppure se la parola è stata indovinata o meno). I motivi
+dietro a questa scelta sono molteplici:
+\begin{itemize}
+	\item In primo luogo ho deciso di gestire la casistica in cui un utente si ritrovi a giocare
+	      con una certa parola e nel frattempo il server ne estrae una nuova. In quel caso la
+	      vecchia parola andrebbe persa e quindi l'utente non potrebbe terminare la partita. Ecco
+	      che nasce quindi la necessità di creare delle \emph{sessioni} in grado di tenere
+	      traccia della partite ancora in corso in modo che ogni utente sia in grado di
+	      terminarle a prescindere da nuove parole estratte.
+	\item Altra casistica d'interesse è quella in cui un utente voglia condividere il risultato
+	      finale di una partita appena fatta. Avendo a disposizione una struttura dati simile è
+	      possibile, tramite il proprio nome utente, accedere all'ultima sessione presente e
+	      condividerla senza che vada persa in seguito ad una successiva estrazione da parte del
+	      server.
+\end{itemize}
+Per alleggerire il carico del server avrei potuto creare la sessione e inviarla al client come
+messaggio di risposta. Sarebbe stato poi compito del client aggiornarla man mano che inviava le
+\verb|guessed words|. Questo implica però l'invio della parola segreta al client andando così ad
+aprire la strada a possibili violazioni.
+
+\subsubsection{Notificatori}
+Si tratta di una \verb|LinkedList| sincronizzata di oggetti di tipo \verb|Notify|, passati dai
+client durante la fase di login.
+
+Ogni qual volta c'è un cambiamento nelle prime tre posizioni della classifica il server scorre
+tutta la lista notificando i client tramite tali oggetti.
+
+In fase di logout l'utente invoca un metodo che si occupa di rimuovere il \emph{notificatore}
+a esso associato.
+
+\subsection{Concorrenza}
+Il server sfrutta più thread per riuscire a gestire contemporaneamente molteplici richieste utente.
+Diventa quindi necessario proteggere le strutture dati soggette a conflitti tramite meccanismi di
+concorrenza.
+
+\subsubsection{Thread avviati lato server}
+Come è possibile notare, tutte le strutture dati coinvolte, sono sincronizzate o concorrenti. I
+thread principalmente coinvolti nella modifica delle strutture dati sono di tre tipi:
+\begin{itemize}
+	\item \textbf{Thread RMI}: quando più client interagiscono contemporaneamente con l'oggetto
+	      remoto per effettuare una registrazione, vengono avviati più thread per gestire le varie
+	      richieste.
+	\item \textbf{Receiver}: quando il server deve ricevere dati su di una connessione TCP,
+	      avvia un thread \verb|Receiver| in grado di leggere il messaggio ricevuto e svolgere le
+	      operazioni richieste dal client.
+	\item \textbf{Sender}: quando il server deve inviare dati, avvia un thread \verb|Sender| in
+	      grado di rispondere ai client non solo tramite TCP ma anche tramite altri protocolli di
+	      comunicazione, a seconda dei casi.
+\end{itemize}
+Tutti questi thread possono modificare attivamente le strutture dati precedentemente elencate
+oppure possono essere soltanto interessati a leggere i dati al loro interno. In ogni caso è
+necessario che i dati all'interno di tali strutture siano sempre consistenti.
+
+\subsection{Comunicazioni}
+Lato server abbiamo diversi protocolli di comunicazione in grado di fornire servizi agli utenti.
+Ho deciso ad affidare le operazioni di lettura solo al thread \verb|Receiver|, mentre il thread
+\verb|Sender| si occupa di tutto ciò che il server deve inviare (a prescindere dal protocollo).
+
+\subsubsection{RMI}
+Tramite \verb|RMI| il server pubblica un oggetto remoto implementato dalla classe
+\verb|RegistrationService|, la quale mette a disposizione dell'utente un metodo (\verb|register|)
+che va ad aggiungere nuovi utenti alla tabella hash degli utenti mantenuta dal server.
+
+Tale oggetto contiene altri due metodi per la registrazione o la cancellazione di un utente dal
+servizio di notifica che si occupa di notificare all'utente cambiamenti in classifica nelle prime
+tre posizioni. Questi due metodi non fanno altro che aggiungere o rimuovere un oggetto remoto
+\verb|Notify|, dalla lista \verb|notifiers| di cui ho parlato nel paragrafo relativo alle strutture
+dati.
+
+Nel caso in cui un utente compia il login, gli vengono anche comunicati gli \verb|username| degli
+utenti che occupano le prime tre posizioni della classifica.
+
+\subsubsection{TCP}
+Per quanto riguarda le connessioni TCP, il server fa uso dei \verb|Channel| per comunicare e
+sfrutta il meccanismo del \verb|Selector| per alleggerire l'impiego di risorse necessarie alla
+gestione delle varie connessioni TCP con i client.
+
+Il modo in cui ho deciso di implementare la gestione delle connessioni TCP da parte del server
+prevede che, in seguito alla possibilità di inviare o ricevere dati, questo avvii o un
+\verb|Receiver| o un \verb|Sender|.
+
+Per evitare errori è necessario, ogni qual volta si avvia un thread, azzerare le operazioni di
+interesse per quel \verb|channel| registrato sul \verb|selector|. Sarà il thread, una volta
+terminate le operazioni, a impostare una nuova operazione di interesse (lettura o scrittura) e a
+\emph{svegliare} il \verb|selector| tramite il metodo \verb|wakeup|.
+
+Questo è necessario poiché il \verb|selector| continua a vedere il \verb|channel| come pronto a
+leggere o scrivere dato che è possibile che venga invocato nuovamente il metodo \verb|select|
+prima che il thread abbia terminato il suo compito.
+
+\subsubsection{Attachment}
+Ogni volta che un canale viene registrato sul \verb|selector|, gli viene allegato un oggetto di
+tipo \verb|Attachment| contenente tutte le strutture dati necessarie a svolgere i propri compiti
+e un \verb|ByteBuffer|, necessario alla lettura e scrittura da e sui canali.
+
+Il \verb|ByteBuffer| funge anche da ponte di comunicazione tra \verb|Receiver| e
+\verb|Sender|. Ogni qual volta \verb|Receiver| riceve un comando elabora una risposta ma si limita
+soltanto a scriverla sul \verb|ByteBuffer|.
+
+Il \verb|Sender| si occupa di inviare la risposta sulla connessione TCP, analizzando prima il suo
+contenuto e nel caso sia necessario, utilizzando RMI per inviare notifiche o UDP per inviare un
+messaggio al gruppo di multicast.
+
+\subsubsection{UDP}
+Il server fa anche utilizzo di socket multicast usato per inviare i risultati delle partite che
+gli utenti vogliono condividere, tramite messaggi UDP.
+
+Inoltre, in caso l'utente effettui il logout o la disconnessione dal server, quest'ultimo invia
+un messaggio sul gruppo multicast che segnali all'utente in questione che può chiudere la
+connessione sul gruppo.
+
+\subsection{Spegnimento}
+In avvio il server genera un thread in attesa di un input da tastiera. Per spegnere il server è
+sufficiente recarsi nel terminale su cui questo è in esecuzione e premere \verb|INVIO|. In questo
+modo il thread avviato in precedenza setterà la variabile booleana \verb|running| a \verb|false|.
+
+Se ci sono ancora client connessi il server continuerà fornire i soliti servizi ma non permetterà
+ad ulteriori client di connettersi.
+
+Una volta che tutti i client si saranno disconnessi, il server terminerà la sua esecuzione tramite
+il metodo \verb|shutdown|, il quale si occuperà di chiudere tutte le strutture di comunicazione
+in funzione e di scrivere sul file \verb|users.json| un backup degli utenti con relative
+statistiche.

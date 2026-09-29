@@ -1,0 +1,81 @@
+\section{Funzioni}
+Vediamo ora come sia possibile realizzare \textbf{funzioni} e \textbf{procedure} in assembler
+andando a capire come implementare una \textbf{chiamata} di funzione, il \textbf{ritorno} dalla
+funzione e come effettuare il \textbf{passaggio di parametri}.
+
+Vogliamo anche capire come riuscire a richiamare del codice già compilato e come generare codice
+che permette di essere eseguito da altri.
+
+\subsection{Passaggio di parametri}
+Prima di entrare nello specifico definiamo alcune convenzioni sul passaggio dei parametri. I
+parametri di una funzione sono gestiti dai registri assegnado ad \verb|r0| il primo parametro,
+ad \verb|r1| il secondo parametro e così via.
+
+In realtà questa regola vale fine a \verb|r3| e se abbiamo più parametri questi vanno a finire
+nello stack. L'ordinamento è una convenzione rispettata dalle funzioni della \verb|glibc|. Ne è un
+esempio la \verb|printf|, che come sappiamo, prende una stringa che indica il formato e una serie
+di parametri di cui vogliamo stampare il valore.
+\begin{minted}{gas}
+.data
+fmt: .string "valore: %d\n"
+.text
+main:
+	ldr r0, =fmt
+	mov r1, #1
+	bl printf
+\end{minted}
+Questo codice chiama la funzione \verb|printf| del C passandogli come parametri \verb|r0| ed
+\verb|r1|. Se eseguito, tale programma stamperà la stringa "\verb|valore: 1|"
+
+Quando i parametri sono pochi possiamo usare i registri e, nello specifico se il
+\textbf{passaggio per valore} avviene scrivendo semplicemente in un registro il valore desiderato
+con una \verb|mov|. Nel caso in cui si voglia effettuare un \textbf{passaggio per indirizzo}
+un'operazione di \verb|load| sarebbe più indicata.
+
+L'istruzione \verb|return| restituisce un valore che dal nostro punto di vista può essere visto
+anch'esso come un problema di passaggio di parametri.
+
+Siamo ora interessati a scrivere una funzione in assembler a cui poter passare dei parametri. Nello
+specifico vogliamo scrivere del codice che sia equivalente ad una funzione scritta in C che prende
+un parametro e lo incrementa di 1.
+\begin{minted}{c}
+int incrementa(int x) { return x + 1; }
+\end{minted}
+In questo caso \verb|x| è un parametro formale ma nel momento in cui andremo a passare un valore
+al suo interno diventerà un parametro attuale.
+
+La convenzione impone che, nel caso ci sia un valore di ritorno, questo venga scritto sul registro
+\verb|r0|. Possiamo quindi definire la nostra funzione in questo modo
+\begin{minted}{gas}
+incrementa:
+	add r0, r0, #1
+	mov pc, lr
+\end{minted}
+con il registro \verb|r0| che dev'essere inizializzato correttamente in modo da contenere il valore
+da incrementare.
+
+Nel caso avessimo più di quattro parametri, come anticipato in precedenza, dobbiamo recuperare i
+parametri che sono andati a finire nello stack. Se ad esempio avessimo una funzione che accetta
+cinque parametri, tramite una \verb|pop| otterremmo il quinto parametro.
+
+\subsection{Funzioni ricorsive}
+Per l'implementazione di funzioni ricorsive dobbiamo andare a lavorare con lo stack e con il
+\verb|link register| per riuscire a salvare tutti i punti di ritorno. Prendiamo ad esempio il
+seguente codice che implementa il calcolo del fattoriale
+\begin{minted}{gas}
+fact:
+	cmp r0, #0 // caso base n = 0
+	bne else
+	mov r0, #1
+	mov pc, lr
+else:
+	push {lr}
+	push {r0} // salvataggio indirizzo di ritorno e parametro n
+	sub r0, r0, #1 // n-1
+	bl fact // fact(n-1)
+	pop {r1} // recupero n e indirizzo di ritorno
+	mul r0, r0, r1 // n * fact(n-1)
+	pop {pc}
+\end{minted}
+la cui parte importante è il salvataggio sullo stack dell'indirizzo di ritorno e di eventuali
+parametri che non devono andare persi.

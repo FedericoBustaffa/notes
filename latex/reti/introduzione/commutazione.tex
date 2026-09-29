@@ -1,0 +1,104 @@
+\section{Commutazione}
+Una internet è data dall'interconnessione di reti composte da link e 
+dispositivi capaci di scambiarsi informazioni. In particolare
+distinguiamo i dispositivi in host e dispositivi di interconnessione.
+
+Nel momento in cui vogliamo inviare un'informazione si deve definire
+il metodo per con cui questa viaggia sulla rete.
+
+Le tecniche di \textbf{commutazione} definiscono il paradigma usato 
+per immettere le informazioni in rete. In particolare andiamo a 
+distinguere due principali metodi di commutazione: commutazione di 
+\textbf{pacchetto} e commutazione di \textbf{circuito}.
+
+Come vedremo, queste due tecniche differiscono per prestazioni, 
+servizi offerti e affidabilità.
+
+\subsection{Commutazione di circuito}
+La commutazione di circuito instaura un cammino dedicato tra i due
+dispositivi che vogliono comunicare tramite una serie di linee di 
+trasmissione e dispositivi di commutazione che collegano sorgente e 
+destinazione. Ogni comunicazione che fa uso della commutazione di 
+circuito si divide in tre fasi:
+\begin{enumerate}
+	\item \textbf{Inizializzazione}: fase iniziale in cui si richiede 
+		di aprire una connessione verso una determinata entità e una 
+		prima infrastruttura si occupa di determinare una connessione 
+		dedicata tra mittente e destinatario.
+
+		I dispositivi di mezzo sono incaricati di gestire tale 
+		collegamento di modo che la connessione non si interrompa.
+	\item \textbf{Trasferimento dati}: una volta determinato il 
+		percorso si possono trasferire i dati grazie alle risorse
+		allocate in fase di inizializzazione.
+
+		Sarà poi compito delle varie strutture intermedie far sì che
+		tali risorse rimangano disponibili per tutta la durata della 
+		comunicazione.
+	\item \textbf{Chiusura}: una volta terminato il trasferimento dati
+		si chiude la connessione deallocando tutte le risorse.
+\end{enumerate}
+Gli svantaggi di questo tipo di commutazione sono principalmente due:
+\begin{itemize}
+	\item \`E necessaria una fase iniziale di inizializzazione prima
+		di iniziare a comunicare.
+	\item Le risorse dedicate ad una connessione rimangono inattive 
+		se non utilizzate.
+\end{itemize}
+D'altro canto abbiamo prestazioni molto elevate in quanto, una volta 
+stabilita la connessione, tutte le risorse sono allocate e non si 
+subiscono interruzioni di alcun tipo dato che la fase iniziale ha 
+assicurato che il percorso scelto fosse in grado di sostenere la 
+connessione richiesta.
+
+\subsection{Commutazione di pacchetto}
+Questo paradigma per la commutazione cerca di risolvere i due problemi 
+della commutazione di circuito, minimizzando il tempo speso nella fase
+iniziale e migliorando la gestione delle risorse occupate dalle varie 
+connessioni.
+
+Il metodo consiste nel dividere l'informazione in pacchetti che vengono
+immessi in rete in maniera del tutto indipendente. Una connessione a
+commutazione di pacchetto è tipicamente suddivisa in queste quattro 
+fasi:
+\begin{enumerate}
+	\item \textbf{Suddivisione}: l'informazione viene suddivisa in 
+		pacchetti, i quali potranno viaggiare in modo indipendente 
+		sulla rete (anche su percorsi diversi).
+	\item \textbf{Accodamento}: nel caso in cui la rete sia
+		congestionata, il router tiene i pacchetti in coda in un 
+		\textbf{buffer} fin quando non ci sarà di nuovo la possibilità
+		di inviarli.
+	\item \textbf{Instradamento}: una volta che la rete è disponibile 
+		all'inoltro del pacchetto il router determina, in base a 
+		informazioni che gli fornisce il pacchetto (destinazione, 
+		lunghezza in bit ecc.), quali sono i possibili nodi a cui 
+		inviarlo e valuta quale tra questi è l'opzione migliore 
+		valutando parametri come ad esempio lo stato di congestione 
+		del traffico.
+	\item \textbf{Ricomposizione}: una volta che tutti i pacchetti
+		sono giunti a destinazione è necessario ricomporli nell'ordine
+		corretto affinché l'informazione sia significativa.
+\end{enumerate}
+Nel caso in cui i pacchetti siano tenuti nel buffer si introduce un 
+\textbf{ritardo} nella trasmissione. Ritardo che con la commutazione 
+di circuito non avevamo dato che l'unico momento di attesa era dovuto 
+all'inizializzazione.
+
+Teniamo anche di conto che i buffer hanno dimensione finita e quindi,
+nel caso in cui la rete sia congestionata e il buffer sia pieno, si è
+costretti a scartare i pacchetti in arrivo.
+
+Il vantaggio sta nella maggiore flessibilità. Se ad esempio uno dei 
+dispositivi di interconnessione si guasta, i pacchetti possono 
+comunque continuare il loro percorso passando da altri nodi.
+
+Il commutatore (router) deve ricevere l'intero pacchetto prima di 
+poterlo inoltrare ad un altro commutatore. Questo perché ha bisogno 
+di informazioni per riuscire a determinare il canale d'uscita di tale 
+pacchetto (\textbf{store and forward}).
+
+C'è inoltre la possibilità di creare \textbf{code di priorità} per
+dare la precedenza a tipologie di pacchetto che necessitano una 
+trasmissione più rapida.
+

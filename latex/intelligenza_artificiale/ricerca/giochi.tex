@@ -1,0 +1,273 @@
+\chapter{Giochi con avversario}
+Fino ad ora abbiamo avuto a che fare con ambienti completamente osservabili, deterministici, a utente singolo e
+composti da stati atomici.
+
+Per trattare problemi come i \textbf{giochi con avversario} dobbiamo cambiare il paradigma e andare verso ambienti
+\emph{pi\`u realistici} e considerare ambienti parzialmente osservabili, non deterministici, multiagente e con una
+rappresentazione degli stati pi\`u complessa.
+
+In questo tipo di ambiente le \textbf{percezioni} sono fondamentali per restringere lo spazio degli stati e informano
+l'algoritmo sull'effetto delle azioni. L'agente in questo caso elabora un \textbf{piano di contingenza}, ovvero una
+strategia che tiene conto delle diverse eventualit\`a.
+
+Il modello di transizione in questo caso restituisce un insieme di stati (l'agente non sa in quale si ritrover\`a).
+
+\subsubsection{Alberi di ricerca AND-OR}
+Un albero di ricerca AND-OR ci viene incontro in questa situazione ed \`e strutturato come segue:
+\begin{itemize}
+	\item I nodi \textbf{OR} sono le scelte dell'agente.
+	\item I nodi \textbf{AND} sono le diverse contingenze da considerare. Sono cio\`e le scelte dell'ambiente, composte
+	      da pi\`u stati possibili.
+	\item Una soluzione ad un problema di ricerca AND-OR \`e un albero che:
+	      \begin{itemize}
+		      \item Ha un nodo obbiettivo in ogni foglia.
+		      \item Specifica un'unica azione nei nodi OR.
+		      \item Include tutti gli archi uscenti da nodi AND (tutte le contingenze).
+	      \end{itemize}
+\end{itemize}
+
+\subsubsection{Panoramica giochi con avversario}
+In questo capitolo parleremo dei \textbf{giochi con avversario}, in cui si deve tener conto della mossa dell'avversario,
+che sar\`a ignota fino a che non sar\`a compiuta. Il compito dell'agente \`e cercare di prevederla analizzando tra le
+mosse possibili, le pi\`u probabili e costruire di conseguenza una strategia per vincere.
+
+\section{Paradigma per giochi con avversario}
+Il paradigma che stiamo per introdurre serve a trattare giochi con avversario come ad esempio gli scacchi. Ed \`e formulato
+come segue:
+\begin{itemize}
+	\item Si devono avere regole semplici e formalizzabili.
+	\item L'ambiente dev'essere accessibile e deterministico.
+	\item Due giocatori che giocano a turno.
+	\item Giochi a somma zero (se uno vince l'altro perde).
+	\item Ambiente multiagente competitivo e strategico.
+	\item Complessit\`a e vincoli di tempo reale (si ha a disposizione un tempo limitato per pensare).
+\end{itemize}
+In questo tipo di giochi una delle strategie migliori \`e quella di eseguire una mossa, provare a identificare la
+contromossa dell'avversario per elaborare una contromossa, vedere cosa fa l'avversario e rielaborare in base alla
+mossa compiuta.
+
+\subsection{Giochi come problemi di ricerca}
+Il problema del gioco visto come un problema di ricerca apparir\`a in questo modo:
+\begin{itemize}
+	\item \textbf{Stati}: configurazioni di gioco. Con la notazione \verb|Player(s)| indichiamo il giocatore
+	      a cui tocca muovere nello stato \verb|s|.
+	\item \textbf{Stato iniziale}: configurazione iniziale del gioco.
+	\item \verb|Actions(s)|: mosse legali nello stato \verb|s|.
+	\item \verb|Result(s, a)|: stato risultante da una mossa.
+	\item \verb|Terminal_Test(s)|: vero se \verb|s| \`e uno stato terminale, falso altrimenti.
+	\item \verb|Utility(s, p)|: valore numerico che valuta gli stati terminali del gioco per il giocatore \verb|p|.
+\end{itemize}
+
+\section{MinMax}
+La \textbf{ricerca MinMax} consiste nella valutazione dello stato successivo facendo riferimento al suo
+\textbf{valore MinMax}.
+
+La miglior mossa da fare \`e quella che tiene di conto anche della contromossa dell'avversario. L'algoritmo MinMax
+assume che l'avversario giochi sempre al massimo delle sue possibilit\`a.
+
+Ci\`o che vogliamo fare \`e massimizzare l'efficacia della mossa del giocatore a cui tocca fare la mossa e minimizzare
+l'efficacia della mossa dell'avversario. Chiameremo quindi \verb|MAX| il giocatore a cui tocca effettuare la mossa
+e \verb|MIN| l'avversario.
+
+\subsection{Calcolo del valore MinMax}
+Nella pratica il valore MinMax di uno stato si calcola come segue:
+\begin{enumerate}
+	\item Se lo stato \`e uno stato terminale applico ritorno \verb|Utility(s, MAX)|.
+	\item Se sto valutando la mossa che deve fare \verb|MAX| ritorno il massimo tra i valori MinMax di tutti i possibili
+	      successori generabili a partire dallo stato \verb|s|.
+	\item Se sto valutando la mossa che deve fare \verb|MIN| ritorno il minimo tra i valori MinMax di tutti i possibili
+	      successori generabili a partire dallo stato \verb|s|.
+\end{enumerate}
+
+\begin{lstlisting}[style=pseudo-style]
+MinMaxDecision(state)
+	value = -infty;
+	best_action = None;
+	foreach action in Actions(state)
+		next_state = Result(state, action);
+		min_value = MinValue(next_state);
+		if min_value > value then
+			value = min_value;
+			best_action = action;
+
+	return best_action;
+\end{lstlisting}
+
+\begin{lstlisting}[style=pseudo-style]
+MinValue(state)
+	if Terminal_Test(state) then
+		return Utility(state);
+	value = infty;
+	foreach action in Actions(state)
+		next_state = Result(state, action);
+		value = Min(value, MaxValue(next_state));
+	
+	return value;
+\end{lstlisting}
+
+\begin{lstlisting}[style=pseudo-style]
+MaxValue(state)
+	if Terminal_Test(state) then
+		return Utility(state);
+	value = -infty;
+	foreach action in Actions(state)
+		next_state = Result(state, action);
+		value = Max(value, MinValue(next_state));
+	
+	return value;
+\end{lstlisting}
+Come possiamo vedere, l'algoritmo sceglie la mossa successiva tra quelle che mettono maggiormente in difficolt\`a
+l'avversario. Ovvero tra quelle che minimizzano maggiormente l'efficacia della mossa successiva dell'avversario.
+
+\textbf{NOTA}: In generale non conviene scegliere la mossa ottima se l'avversario gioca in maniera \emph{sub-ottima}.
+
+\subsection{Analisi MinMax}
+\begin{itemize}
+	\item La complessit\`a in tempo \`e $O(b^m)$.
+	\item La complessit\`a in spazio \`e $O(bm)$.
+\end{itemize}
+
+\section{MinMax euristico}
+Per giochi molto complessi \`e impensabile un'esplorazione sistematica dello spazio degli stati. \`E necessario fare
+uso di \textbf{euristiche} per stimare la bont\`a di uno stato del gioco.
+
+Per farlo aggiungeremo al paradigma descritto in precedenza una funzionae di valutazione euristica, \verb|Eval(s)|.
+
+La nuova strategia consiste nel guardare avanti di $d$ livelli.
+\begin{itemize}
+	\item Si espande l'albero di ricerca un certo numero di livelli $d$ compatibile con tempo e spazio a disposizione.
+	\item Si valutano gli stati ottenuti e si propaga indietro il risultato con la regola del \verb|MAX| e \verb|MIN|.
+\end{itemize}
+Il risultato \`e come prima un algoritmo MinMax ma con \textbf{Cutoff}. Perci\`o nelle funzioni \verb|MinValue| e
+\verb|MaxValue| viste prima:
+\begin{lstlisting}[style=pseudo-style]
+	if Terminal_Test(state) then
+		return Utility(state);
+\end{lstlisting}
+diventa
+\begin{lstlisting}[style=pseudo-style]
+	if Cutoff(state, depth) then
+		return Eval(state);
+\end{lstlisting}
+La funzione \verb|Cutoff| mi dice se ho raggiunto il livello $d$ che interpreto come stato terminale. Se l'ho raggiunto
+allora applica \verb|Eval|. Ovviamente \verb|Cutoff| riconosce anche veri e propri stati terminali come faceva
+\verb|Terminal_Test|.
+
+\subsection{Calcolo del valore H-MinMax}
+Il calcolo del valore H-MinMax non cambia molto rispetto a prima, semplicemente qui facciamo un numero di previsioni in
+avanti limitato e ci affidiamo ad un'euristica per la valutazione dello stato terminale:
+\begin{itemize}
+	\item Se lo stato \`e uno stato terminale oppure ho raggiunto il limite di profondit\`a $d$ ritorno \verb|Eval(s)|.
+	\item Se sto valutando la mossa che deve fare \verb|MAX| ritorno il massimo tra i valori H-MinMax di tutti i possibili
+	      successori generabili a partire dallo stato \verb|s|.
+	\item Se sto valutando la mossa che deve fare \verb|MIN| ritorno il minimo tra i valori H-MinMax di tutti i possibili
+	      successori generabili a partire dallo stato \verb|s|.
+\end{itemize}
+
+\subsection{Funzione di valutazione euristica}
+La funzione \verb|Eval| di valutazione \`e una \textbf{stima dell'utilit\`a attesa} a partire da una certa posizione.
+La qualit\`a di questa funzione \`e determinante e deve:
+\begin{itemize}
+	\item Essere \textbf{consistente} con l'utilit\`a se applicata a stati terminali di gioco.
+	\item Essere \textbf{efficiente} da calcolare.
+	\item Riflettere le probabilit\`a effettive di vittoria.
+	\item Avere un \textbf{valore atteso} che combina probabilit\`a con utilit\`a dello stato terminale; pu\`o essere
+	      appreso con l'esperienza.
+\end{itemize}
+
+\subsubsection{Stati non quiescienti}
+A volte l'esplorazione fino ad un certo livello pu\`o mostrare una situazione molto vantaggiosa ma dopo si finisce per
+trovarsi in una situazione di svantaggio. La soluzione in questi casi \`e applicare la valutazione a
+\textbf{stati quiescienti}, ossia stati in cui la funzione di valutazione non \`e soggetta a mutamenti repentini.
+
+\subsubsection{Effetto orizzonte}
+In alcune occasioni pu\`o succedere che vengano privilegiate mosse diversive che hanno il solo effetto di spingere il
+problema oltre l'orizzonte. Quindi si deve riuscire a capire quando si stanno compiendo mosse inutili che stanno solo
+rimandando il problema.
+
+\section{Potatura Alfa-Beta}
+Non \`e necessario esplorare ogni cammino, la \textbf{potatura Alfa-Beta} dimezza la ricerca mantenendo la valutazione
+MinMax corretta.
+
+Si va avanti in profondit\`a fino al livello desiderato e propagando indietro i valori si
+decide se si pu\`o abbandonare l'esplorazione del sotto-albero.
+\begin{enumerate}
+	\item \verb|MaxValue| e \verb|MinValue| vengono invocate rispettivamente con due valori di riferimento $\alpha$
+	      (inizialmente $-\infty$) e $\beta$ (inizialmente $+\infty$).
+	\item Rappresentano rispettivamente la migliore alternativa per \verb|MAX| e per \verb|MIN| fino a quel momento.
+	\item I tagli avvengono quando, nel propagare all'indietro:
+	      \begin{itemize}
+		      \item $v \geq \beta$ per i nodi \verb|MAX| (taglio $\beta$).
+		      \item $v \leq \alpha$ per i nodi \verb|MIN| (taglio $\alpha$).
+	      \end{itemize}
+\end{enumerate}
+Tutto rimane uguale tranne per il fatto che \verb|value| viene inizializzato con \verb|MaxValue| valutato
+tra $-\infty$ e $+\infty$.
+\begin{lstlisting}[style=pseudo-style]
+AlphaBeta(state)
+	value = MaxValue(state, -infty, +infty);
+	best_action = None;
+	foreach action in Actions(state)
+		next_state = Result(state, action);
+		min_value = MinValue(next_state, -infty, +infty);
+		if min_value > value then
+			value = min_value;
+			best_action = action
+	
+			return best_action;
+\end{lstlisting}
+
+\begin{lstlisting}[style=pseudo-style]
+MaxValue(state, alpha, beta)
+	if Terminal_Test(state) then
+		return Utility(state);
+	value = -infty;
+	foreach action in Actions(state)
+		next_state = Result(state, action);
+		value = Max(value, MinValue(next_state, alpha, beta));
+		if value >= beta then
+			return value;
+		alpha = Max(alpha, value);
+	return value;
+\end{lstlisting}
+
+\begin{lstlisting}[style=pseudo-style]
+MinValue(state, alpha, beta)
+	if Terminal_Test(state) then
+		return Utility(state);
+	value = +infty;
+	foreach action in Actions(state)
+		next_state = Result(state, action);
+		value = Min(value, MaxValue(next_state, alpha, beta));
+		if value <= alpha then
+			return value;
+		beta = Min(beta, value);
+	return value;
+\end{lstlisting}
+
+\subsection{Ordinamento delle mosse}
+La potatura ottimale si ottiene quando ad ogni livello sono generate prima le mosse migliori per chi gioca:
+\begin{itemize}
+	\item Per i nodi \verb|MAX| sono generate prima le mosse con valore pi\`u alto.
+	\item Per i nodi \verb|MIN| sono generate prima le mosse con valore pi\`u basso (migliori per \verb|MIN|).
+\end{itemize}
+
+\subsection{Analisi Alfa-Beta}
+\begin{itemize}
+	\item La complessit\`a in tempo \`e $O(b^{m/2})$.
+	\item La complessit\`a in spazio rimane $O(bm)$.
+\end{itemize}
+
+\subsection{Miglioramenti}
+Dunque Alfa-Beta pu\`o arrivare a profondit\`a doppia rispetto a MinMax a parit\`a di tempo.
+
+Per avvicinarsi all'ordinamento ottimale possiamo:
+\begin{itemize}
+	\item Usare un \textbf{approfondimento iterativo} cos\`i da scoprire,
+	      ad una certa iterazione, informazioni utili per l'ordinamento delle mosse. Informazioni da usare
+	      in una successiva iterazione.
+	\item Tenere in memoria una \textbf{tabella delle trasposizioni} in cui memorizzare la valutazione di ogni stato.
+	\item \textbf{Potatura in avanti}: si esplorano solo alcune mosse ritenute promettenti e si tagliano le altre.
+	\item \textbf{Database di mosse di apertura e chiusura}: aprire e chiudere il gioco tramite schemi gi\`a conosciuti
+	      e collaudati invece di stare ad esplorare stati, come quelli iniziali, in cui ci sono poche mosse sensate.
+\end{itemize}

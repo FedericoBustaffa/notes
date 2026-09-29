@@ -1,0 +1,207 @@
+\chapter{L'aritmetica del calcolatore}
+
+I punti d'interesse del corso sono quindi
+
+\begin{itemize}
+	\item Capire come i numeri sono rappresentati in macchina.
+	\item Capire come viene implementata l'aritmetica in macchina.
+	\item Capire come il calcolatore approssima i calcoli eseguiti.
+	\item Capire se tale approssimazione è accettabile per il problema che stiamo cercando di risolvere.
+\end{itemize}
+
+In questo capitolo andremo a trattare la \emph{rappresentazione} dei numeri in macchina, l'\emph{implementazione}
+dell'aritmetica e quali \emph{errori} si possono generare.
+
+\section{Rappresentazione dei numeri}
+
+Cerchiamo come prima cosa di rappresentare i numeri in modo \textbf{univoco}, per farlo abbandoniamo la forma
+frazionaria di rappresentazione. Come sappiamo, le quantità
+\[ 0.1 \quad \frac{1}{10} \quad \frac{2}{20} \]
+hanno tutte lo stesso valore ma, come possiamo facilmente intuire, la forma frazionaria fornisce infinite
+rappresentazioni, tutte equivalenti per la stessa quantità $0.1$.
+
+Considerando anche che la riduzione ai minimi termini di una frazione è un'operazione in generale costosa ma
+necessaria al fine di avere espressioni più facili da calcolare, non ci possiamo permettere un tipo di
+rappresentazione di questo tipo. Ecco perché rappresenteremo numeri reali come \emph{sequenza di cifre decimali}.
+
+\begin{observation}
+	Talvolta sarà necessario passare alla rappresentazione di numeri complessi ma, come sappiamo, possiamo vedere
+	un numero complesso come una coppia di reali, dunque non ci saranno grosse differenze nella rappresentazione
+	di questi ultimi.
+\end{observation}
+
+\begin{observation}
+	La rappresentazione in cifre decimali potrebbe essere \textbf{infinita} (per esempio
+	$\frac{1}{3} = 0.\overline{33}$), ma chiaramente non è possibile utilizzare una rappresentazione del genere
+	su un calcolatore.
+\end{observation}
+
+Quest'ultima osservazione ci dice che un grado di approssimazione sarà necessario andando così a generare un
+certo errore sulla rappresentazione.
+
+Per una questione di \emph{minimizzazione} dello spazio utilizzato per la rappresentazione dei numeri in
+macchina si farà ricorso ad esponenziali per rappresentare cifre non significative in forma \emph{compatta}.
+
+\begin{example}
+	Per esempio, per rappresentare 0.0000001, si usa la seguente notazione
+	\[ 0.0000001 = 0.1 \cdot 10^{-6} \]
+\end{example}
+
+\subsection{Rappresentazione normalizzata in virgola mobile}
+
+\begin{theorem}[Rappresentazione]\label{th: rappresentazione}
+	Dato $x \in \R$ tale che $x \neq 0$, e sia $B \in \N$ tale che $B > 1$, la \textbf{base} di numerazione,
+	esistono e sono univocamente determinati:
+	\begin{itemize}
+		\item Un intero $p \in \Z$, detto \textbf{esponente} della rappresentazione.
+		\item Una serie di numeri naturali $\{ d_i \}_{i \geq 1}$ con
+		      \begin{itemize}
+			      \item $d_1 \neq 0$
+			      \item $0 \leq d_i \leq B - 1$
+			      \item Tutti i $d_i$ non definitivamente uguali a $B - 1$
+		      \end{itemize}
+		      dette \textbf{cifre} di rappresentazione.
+	\end{itemize}
+	tali che
+	\[ x = \sign(x) \cdot B^p \cdot \sum_{i=1}^{+\infty} d_i B^{-i} \]
+\end{theorem}
+
+\begin{definition}
+	La serie $d_1 B^{-1} + d_2 B^{-2} + \dots$ è detta \textbf{mantissa}.
+\end{definition}
+
+La rappresentazione \ref{th: rappresentazione} è detta \textbf{rappresentazione normalizzata in virgola mobile}
+(\emph{floating point}) in quanto l'esponente $p$ è determinato in modo che il numero da rappresentare abbia
+parte intera nulla e prima cifra dopo la virgola non nulla.
+
+\subsubsection{Vincoli per la rappresentazione}
+Andiamo ad analizzare meglio i vincoli imposti nel teorema \ref{th: rappresentazione} sulla rappresentazione.
+\begin{itemize}
+	\item Le condizioni $d_1 \neq 0$ (rappresentazione normalizzata) e $d_i$ non definitivamente uguale a
+	      $B - 1$ ci garantiscono l'\emph{unicità} della rappresentazione
+	\item Il numero $x = 0$ non ammette rappresentazione normalizzata e in macchina viene trattato e
+	      memorizzato in modo speciale.
+\end{itemize}
+
+\begin{example}
+	Rappresentiamo 0.1 tramite la rappresentazione \ref{th: rappresentazione}:
+	\[ 0.1 = + 10^0 \cdot (1 \cdot 10^{-1} + 0 \cdot 10^{-2} + \dots) \]
+	Se però volessimo rappresentare lo stesso numero in modo diverso, lo potremmo fare in questo modo
+	\[ 0.1 = + 10^1 \cdot (0 \cdot 10^{-1} + 1 \cdot 10^{-2} + 0 \cdot 10^{-3} + \dots) \]
+	Cambiando ogni volta l'esponente $p$ e adattando i $d_i$ è possibile trovare infinte rappresentazioni
+	per 0.1. Dunque $d_1$ deve essere non nullo.
+\end{example}
+
+\begin{example}
+	Come sappiamo $0.\overline{9} = 1$. Se volessimo rappresentare 1 otterremmo
+	\[ 1 = + 10^1 \cdot (1 \cdot 10^{-1} + 0 \cdot 10^{-2} + \dots) \]
+	mentre se rappresentassimo $0.\overline{9}$ otterremmo
+	\[ 0.\overline{9} = + 10^0 \cdot (9 \cdot 10^{-1} + 9 \cdot 10^{-2} + \dots) \]
+	Si ottiene così una rappresentazione normalizzata ($d_1 = 9$) e costituita da soli 9 dopo la virgola,
+	ma dato che i due numeri sono equivalenti la rappresentazione utilizzata è la prima.
+\end{example}
+
+\subsection{Rappresentazione in macchina}
+Per ora abbiamo dato una definizione ideale della rappresentazione in virgola mobile di un numero reale.
+In macchina si ha però a disposizione un registro di lunghezza finita per memorizzarla. Tale registro è
+suddiviso in tre parti:
+\begin{itemize}
+	\item Segno di $x$
+	\item Esponente $p$
+	\item Cifre di rappresentazione $\{ d_i \}$
+\end{itemize}
+Abbiamo quindi un numero finito di rappresentazioni possibili in macchina.
+
+\begin{definition}\label{def: numeri_macchina}
+	Si definisce \textbf{insieme dei numeri di macchina} in rappresentazione \emph{floating point} con $t$
+	cifre, base $B$ e range $(-m, M)$, l'insieme dei numeri reali
+	\[
+		\F (B, t, m, M) = \{ 0 \} \cup
+		\{ x \in \R : x = \sign(x) \cdot B^p \cdot \sum_{i=1}^t d_i B^{-i} \}
+	\]
+	con $0 \leq d_i \leq B-1$, $d_1 \neq 0$ e $-m \leq p \leq M$.
+\end{definition}
+
+\begin{observation}
+	Guardando l'\emph{insieme dei numeri di macchina} possiamo osservare che
+	\begin{itemize}
+		\item Ha \textbf{cardinalità finita}
+		      \[ N = 2 B^{t-1} (B - 1) (M + m + 1) + 1 \]
+		      Otteniamo questo risultato dato che
+		      \begin{itemize}
+			      \item Il segno di $x$ può avere solo 2 valori possibili.
+			      \item Avendo $t$ cifre disponibili per la rappresentazione abbiamo $B^t$ possibili
+			            configurazioni. Ma dato che $d_1 \neq 0$ allora passiamo a $B^{t-1}$ configurazioni
+			            effettive.
+			      \item Ogni $d_i$ ha $B - 1$ possibili valori.
+			      \item L'esponente è compreso tra $-m$ ed $M$ dunque abbiamo $m + M$ possibili valori ai quali
+			            dobbiamo aggiungere lo zero.
+			      \item Aggiungiamo lo zero.
+		      \end{itemize}
+		\item Se $x \in \F(B, t, m, M)$ e $x \neq 0$ allora $\omega = B^{-m - 1}$ è il più piccolo numero di
+		      macchina positivo e $\Omega = B^M (1 - B^{-t})$ è il più grande numero di macchina positivo e
+		      vale
+		      \[ \omega \leq |x| \leq \Omega \]
+		      Ne segue che non è possibile rappresentare esattamente numeri non nulli di modulo minore a
+		      $\omega$. Ecco perché, per tali numeri, è prevista una rappresentazione \emph{denormalizzata}.
+
+		      Quando $p = -m$ la condizione $d_1 \neq 0$ può essere abbandonata potendo quindi rappresentare
+		      come numero più piccolo positivo $B^{-m-t}$ e dunque riuscendo a rappresentare numeri positivi
+		      e negativi compresi in modulo tra
+		      \[ [ B^{-m-t} \;;\; B^{-m-1} - B^{-m-t} ] \]
+
+		      Analogamente se $p = M$ si introducono rappresentazioni speciali per i simboli $\pm \infty$
+		      e NaN.
+		\item L'insieme dei numeri di macchina $\F (B, t, m, M)$ è simmetrico rispetto all'origine.
+		\item Posto $x = (-1)^s \cdot B^p \cdot \alpha$ appartente a $\F(B, t, m, M)$ allora il
+		      successivo numero di macchina si ottiene sommando alle cifre di rappresentazione il più piccolo
+		      numero di macchina rappresentabile in quell'ordine di grandezza, ossia
+		      \[ B^p \cdot 1 \cdot B^{-t} = B^{p - t} \]
+		      Otteniamo quindi che il numero di macchina successivo a $x$ è
+		      \[ y = (-1)^s \cdot B^p \cdot (\alpha + B^{p-t}) \]
+		      Questo ci dice che, in un sistema in virgola mobile, la distanza tra due numeri di macchina
+		      \[ |y - x| = B^{p-t} \]
+		      varia con $p$, ovvero con l'ordine di grandezza dei numeri considerati. In generale possiamo
+		      immaginarci l'insieme dei numeri di macchina più denso vicino a $\omega$, al contrario andando
+		      verso $\Omega$ la distanza tra i numeri di macchina sarà più grande.
+	\end{itemize}
+\end{observation}
+
+\subsubsection{Standard IEEE per la doppia precisione}
+Lo standard proposto dal IEEE per la rappresentazione in virgola mobile (base 2) prevede registri lunghi 64 bit.
+In prima battuta si era pensato ad una suddivisione del registro di questo tipo:
+\begin{itemize}
+	\item 1 bit per il segno.
+	\item 11 bit per l'esponente.
+	\item 52 bit per le cifre di rappresentazione.
+\end{itemize}
+Il problema di questo modello di rappresentazione è la doppia rappresentazione dello 0 ($-0$ e $+0$) ed è stato
+quindi scartato.
+
+L'attuale standard rappresenta l'esponente in \textbf{traslazione}. Chiariamo meglio
+il concetto procedendo con ordine:
+\begin{enumerate}
+	\item Dato che si hanno 11 bit per l'esponente si possono rappresentare numeri che vanno da 0 a 2047. Abbiamo
+	      quindi 2048 configurazioni totali per l'esponente.
+	\item Le due configurazioni di bit con tutti 0 e tutti 1 vengono tenute da parte e trattate in modo
+	      \emph{speciale}. Ci rimangono dunque 2046 configurazioni.
+	\item Lo standard definisce l'esponente nell'intervallo
+	      \[ [ -1021, \; 1024 ] \]
+	      Abbiamo dunque che $m = -1021$ e $M = 1024$.
+\end{enumerate}
+Notiamo inoltre che, in notazione normalizzata, $d_1$ deve essere $\neq 0$ ma dato che stiamo operando in
+base 2 possiamo dedurre che $d_1$ deve essere sempre uguale a 1. Questo ci permette di non includere $d_1$
+nelle cifre della rappresentazione dandoci la possibilità di usare, di fatto, 53 cifre di rappresentazione.
+
+Come abbiamo detto poco fa, le due configurazioni dell'esponente con tutti 0 e tutti 1, sono configurazioni
+\emph{speciali}. Nel caso in cui l'esponente sia rappresentato da tutti 1 distinguono due casi:
+\begin{itemize}
+	\item Nel caso in cui nella mantissa ci sia almeno una cifra diversa da 0 allora si rappresenta
+	      $\pm \infty$
+	\item Nel caso in cui tutte le cifre della mantissa siano uguali a 0 allora si rappresenta NaN.
+\end{itemize}
+Nel caso in cui l'esponente sia rappresentato da tutti 0 allora si usa la notazione \textbf{denormalizzata}
+per riuscire a rappresentare anche un po' dei numeri che stanno tra 0 e $\omega$. Per riuscire a farlo
+abbandoniamo il vincolo $d_1 \neq 0$. Nello specifico, si va rappresentare il numero in questo modo
+\[ x = \sign(x) \cdot 2^{-1022} \cdot \sum_{i=1}^t d_i \cdot 2^{-i} \]
+andando a rappresentare lo 0 nel caso in cui ci siano tutti 0 nella mantissa.
