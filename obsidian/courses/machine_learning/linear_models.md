@@ -171,7 +171,7 @@ And the point where our line changes sign define the so called **linear
 threshold unit** (**LTU**), that in general is an hyperplane orthogonal to the
 **decision hyperplane**.
 
-![Linear model binary classification](/files/linear_model_binary_classification_with_boundary.png)
+![Linear model binary classification](linear_model_binary_classification_with_boundary.png)
 
 This model can make mistakes because it doesn't aim to find the best way to
 separate the different labeled data; from the model point of view it tries to

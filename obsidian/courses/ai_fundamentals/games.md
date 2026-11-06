@@ -157,7 +157,7 @@ follows these steps:
 4. **Backpropagation**: update the value of the nodes in the search tree from
    the newly added node up to the root, following the selection path.
 
-![MCTS|600](/files/mcts.png)
+![MCTS|600](mcts.png)
 
 Return in the end the move with the _highest number of play-outs_.
 

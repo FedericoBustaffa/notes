@@ -12,7 +12,7 @@ The basic structure of a **shared memory system** is represented by the Von
 Neumann architecture, where an central processing unit takes an input and
 produce an output, reading and writing from **memory**.
 
-![Von Neumann Architecture|500](/files/von_neumann.png)
+![Von Neumann Architecture|500](von_neumann.png)
 
 An important aspect of this architecture is the so called **Von Neumann
 bottleneck**, originated by the difference between computation speed (typically
@@ -112,7 +112,7 @@ thing the programmer can directly manage is the computational intensity $I$,
 trying to either increase the number of operations, or reducing the amount of
 transferred data.
 
-![Roofline Model|350](/files/roofline_model.png)
+![Roofline Model|350](roofline_model.png)
 
 If $I$ is low, the performance is limited by the transfer $B$, if instead $I$ is
 high, the performance is limited by the execution units $R_\text{peak}$.
@@ -120,7 +120,7 @@ high, the performance is limited by the execution units $R_\text{peak}$.
 The best use of resources is the inflection point, called **machine balance**,
 that can change with different architectures.
 
-![Roofline Model|350](/files/roofline_model2.png)
+![Roofline Model|350](roofline_model2.png)
 
 The aim of the program is not always to reach peak performances, but to stay out
 of the _poor performance_ zone, either performing good or make a good usage of
@@ -129,7 +129,7 @@ memory bandwidth.
 To be more precise is also possible to define a **cache-aware** roofline model
 with various levels of cache to have a finer grain estimation
 
-![Cache-Aware Roofline Model|350](/files/roofline_model_cache.png)
+![Cache-Aware Roofline Model|350](roofline_model_cache.png)
 
 having now different levels of bandwidth to evaluate performances.
 

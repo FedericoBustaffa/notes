@@ -23,7 +23,7 @@ The **perceptron** is a (very simplified) mathematical abstraction of
 **biological neuron**, and can be seen as the minimal unit of neural networks
 (also called **artificial neuron**).
 
-![Perceptron|550](/files/perceptron.png)
+![Perceptron|550](perceptron.png)
 
 Like biological neurons, artificial ones try to reinforce connections through
 continuous and repeated stimulations. In the artificial case we have an input

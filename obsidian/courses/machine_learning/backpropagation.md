@@ -20,7 +20,7 @@ In order to understand the backpropagation is sufficient to build a very simple
 network with one neuron per layer and consider only one training example.
 Scaling the computation to general case is pretty straightforward.
 
-![Linear Neural Network](/files/linear_nn.svg)
+![Linear Neural Network](linear_nn.svg)
 
 Assuming $y$ is the target value, is possible to compute the error (MSE in this
 case) between $y$ and $o_k$, that is the network's output for input $x$.
@@ -159,7 +159,7 @@ again the entire chain every time.
 In order to apply the backpropagation in a classic multi-layer perceptron
 topology not much changes.
 
-![Multi-Layer Perceptron](/files/mlp.png)
+![Multi-Layer Perceptron](mlp.png)
 
 What in the previous case we considered scalars are now vectors or matrices, for
 example weights and biases. So we can think about every operation in a vectorial
