@@ -19,7 +19,7 @@ The PRAM machine is composed by $n$ _identical_ processors connected to a global
 shared memory $M$ and any memory location is accessible from any processor in
 **constant time**.
 
-![Pram Model|500](/files/pram_model.png)
+![Pram Model|500](pram_model.png)
 
 The communication between processors can be implemented by reading and writing
 to the global memory $M$.
@@ -83,7 +83,7 @@ $$
 A possible algorithm is called **recursive doubling algorithm** which consider
 $n = |X|$ and $p = n$:
 
-![Prefix Computation|400](/files/prefix1.png)
+![Prefix Computation|400](prefix1.png)
 
 But for the PRAM model it is not cost optimal because we have to consider that
 every processor executes $\log (n)$ operations that gives us a total cost of

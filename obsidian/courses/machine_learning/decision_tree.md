@@ -20,7 +20,7 @@ More formally we can see decision trees as a disjunction of conjunctions, or a
 chain of _if-then-else_ rules. This is because the decision tree _splits_ the
 feature space at each iteration, considering one feature/dimension at a time.
 
-![Decision Tree Regions|600](/files/decision_tree_regions.png)
+![Decision Tree Regions|600](decision_tree_regions.png)
 
 A general decision tree algorithm is the following
 
@@ -54,7 +54,7 @@ patterns ($0 \leq p_-, \, p_+ \leq 1$).
 So for two classes we have that the entropy has a maximum where the proportion
 is $0.5$ and minimum when all the patterns are classified the same.
 
-![Entropy|600](/files/entropy.png)
+![Entropy|600](entropy.png)
 
 The entropy alone cannot be used to select the best feature for the split
 because it doesn't consider any feature in the formula, it's just a measure of
@@ -82,7 +82,7 @@ where
 The higher the information gain the more effective the feature in classifying
 training data will be.
 
-![Gain Split|600](/files/dt_gain.png)
+![Gain Split|600](dt_gain.png)
 
 The information gain is computed for all the features and the one the highest
 gain is selected as the first decision node. When we reach a point where the

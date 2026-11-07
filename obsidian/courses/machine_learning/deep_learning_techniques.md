@@ -28,7 +28,7 @@ During the optimization, the model could encounter cliffs in the cost function,
 causing a big variation in the gradient and causing big jumps in the
 optimization process.
 
-![Loss Function Cliff|600](/files/gradient_clipping.png)
+![Loss Function Cliff|600](gradient_clipping.png)
 
 In order to avoid this and mantain a smooth stable training, is possible to
 **clip** the gradient if its norm exceeds a threshold $v$, so if $\| g \| > v$,
@@ -79,7 +79,7 @@ and train them for an epoch. Typically the number of **subnet** is fixed (like
 10-20) and some configuration might not be valid: there isn't a path from input
 to output.
 
-![Dropout|400](/files/dropout.png)
+![Dropout|400](dropout.png)
 
 This has the effect of training multiple models potentially with different input
 parts (like a bootstrap) but for the same task. In practice this is an ensemble

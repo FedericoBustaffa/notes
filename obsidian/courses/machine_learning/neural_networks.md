@@ -26,7 +26,7 @@ In a MLP architecture
 
 Let's take for example this single layer perceptron
 
-![Multi-Layer Perceptron](/files/mlp.png)
+![Multi-Layer Perceptron](mlp.png)
 
 As we can see is a composition of units where the notation $w_{ji}$ describes
 the weights belonging to the $j$-th unit that connect the $i$-th (in this case
@@ -70,7 +70,7 @@ where $\text{net}_t (x)$ is basically the input of node $t$ from the previous
 layer and $o_t (x)$ is the output of the unit $t$, so the input passed through
 the activation function $f_t$.
 
-![NN representation](/files/nn_notation.png)
+![NN representation](nn_notation.png)
 
 taking also into account that the bias has a $1$ input on the connection denoted
 as $w_{t0}$.
@@ -100,7 +100,7 @@ steps:
 For the recurrent architecture we have feedback loops that provides the network
 with dynamical properties, letting a memory of the past computations.
 
-![Recurrent Neural Network Sketch](/files/recurrent_nn.png)
+![Recurrent Neural Network Sketch](recurrent_nn.png)
 
 This allows to extend the representation capability of the model to the
 processing of sequences and structured data.

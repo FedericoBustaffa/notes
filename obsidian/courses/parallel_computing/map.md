@@ -96,7 +96,7 @@ In order to reduce the service time of the emitter and the overall latency of
 the map to complete the scatter distribution, a binary tree scatter distribution
 can be employed.
 
-![Map Tree Scatter|400](/files/map_tree_scatter.png)
+![Map Tree Scatter|400](map_tree_scatter.png)
 
 In this way the emitter service time becomes
 
@@ -112,7 +112,7 @@ $$
 Similarly, the same patter can be used to reduce the collector's service time
 and the end-to-end latency.
 
-![Map Tree|400](/files/map_tree_gather.png)
+![Map Tree|400](map_tree_gather.png)
 
 In this way the collector service time becomes
 

@@ -22,7 +22,7 @@ in the input data. Usually we are talking about **clusering** and
 A typical task for unsupervised learning is **clustering** where the model tries
 to partition data into **clusters**, that are subsets of similar data.
 
-![Clustering|600](/files/clustering.png)
+![Clustering|600](clustering.png)
 
 Usually the number of cluster must be known before the algorithm runs, or it
 must be a grid search hyperparameter, assuming there is a good way to determine

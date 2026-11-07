@@ -205,7 +205,7 @@ The **naive Bayes model** is implemented by a graph that factorizes nicely our
 world and probabilities if random variables are independent and it scales
 linearly with the number $n$ of variables.
 
-![Naive Bayes Graph|400](/files/naive_bayes_graph.png)
+![Naive Bayes Graph|400](naive_bayes_graph.png)
 
 There are no horizontal links between effects. For example given a cause and two
 effects we have

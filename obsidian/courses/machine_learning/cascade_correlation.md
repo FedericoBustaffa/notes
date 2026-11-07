@@ -22,7 +22,7 @@ After the training, the new unit weights are frozen and the output layer is
 retrained. When a unit is added is directly connected with all inputs and all
 previously added units.
 
-![Cascade Correlation|500](/files/cascade_correlation.png)
+![Cascade Correlation|500](cascade_correlation.png)
 
 The intuition behind the algorithm is that new units aim to _explain_ the
 current error, by maximizing the correlation between them and the network error.

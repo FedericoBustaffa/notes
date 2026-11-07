@@ -12,7 +12,7 @@ An **autoencoder** is a network that tries to reproduce its input. That's way
 is called _semi-supervised_ (or _self-supervised_) learning; there is still an
 _error_ function to optimize but there is no real target.
 
-![Autoencoder|500](/files/autoencoder.png)
+![Autoencoder|500](autoencoder.png)
 
 Compressing the input and then decompressing it has the effect of catch
 underlying structure in it (**undercomplete** autoencoder). It's also possible

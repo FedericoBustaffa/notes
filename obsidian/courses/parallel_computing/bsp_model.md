@@ -20,7 +20,7 @@ parts:
 All the $n$ processors are identical and they can communicate through the
 network via message passing, in a uniform amount of time.
 
-![BSP Model|400](/files/bulk_model.png)
+![BSP Model|400](bulk_model.png)
 
 This differs a little from the PRAM model which use the global memory as a space
 to write messages among processors.
